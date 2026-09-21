@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------
+# SQLite everywhere.
+#
+# Rails 8 ships DB-backed adapters for caching and background jobs, so the
+# application needs neither PostgreSQL nor Redis nor a separate database server.
+# Each concern gets its own file so the write lock of one never blocks another.
+#
+#   storage/<env>.sqlite3        - application data
+#   storage/<env>_cache.sqlite3  - Solid Cache entries
+#   storage/<env>_queue.sqlite3  - Solid Queue jobs
+# ---------------------------------------------------------------------------
+default: &default
+  adapter: sqlite3
+  pool: <%= ENV.fetch('RAILS_MAX_THREADS') { 5 } %>
+  timeout: 5000
+  # WAL + busy_timeout let the Puma web processes and the Solid Queue worker
+  # read/write the same file without "database is locked" errors.
+  pragmas:
+    journal_mode: wal
+    synchronous: normal
+    foreign_keys: true
+    busy_timeout: 5000
+    cache_size: -64000
+
+development:
+  primary:
+    <<: *default
+    database: storage/development.sqlite3
+  cache:
+    <<: *default
+    database: storage/development_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: storage/development_queue.sqlite3
+    migrations_paths: db/queue_migrate
+
+test:
+  primary:
+    <<: *default
+    database: storage/test.sqlite3
+  cache:
+    <<: *default
+    database: storage/test_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: storage/test_queue.sqlite3
+    migrations_paths: db/queue_migrate
+
+production:
+  primary:
+    <<: *default
+    database: <%= ENV.fetch('DATABASE_PATH') { 'storage/production.sqlite3' } %>
+  cache:
+    <<: *default
+    database: <%= ENV.fetch('CACHE_DATABASE_PATH') { 'storage/production_cache.sqlite3' } %>
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: <%= ENV.fetch('QUEUE_DATABASE_PATH') { 'storage/production_queue.sqlite3' } %>
+    migrations_paths: db/queue_migrate

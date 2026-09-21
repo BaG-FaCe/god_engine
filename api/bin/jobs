@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# Runs the Solid Queue supervisor (dispatchers + workers + recurring tasks).
+#
+# Linux / macOS / WSL only: the supervisor uses `fork`, which Windows does not
+# implement. On Windows use the Puma web process with
+# `BACKGROUND_JOB_ADAPTER=async` instead (see docs/15-deployment.md).
+require_relative '../config/environment'
+
+unless Shared::Infrastructure::Jobs::JobAdapter.fork_available?
+  abort(
+    "Solid Queue requires `fork`, which is unavailable on #{RUBY_PLATFORM}.\n" \
+    "Start the API with BACKGROUND_JOB_ADAPTER=async instead, or run this " \
+    "worker on Linux/macOS/WSL."
+  )
+end
+
+require 'solid_queue/cli'
+SolidQueue::Cli.start(ARGV)

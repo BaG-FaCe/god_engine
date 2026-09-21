@@ -1,0 +1,20 @@
+# Solid Cache configuration.
+#
+# Entries live in the `cache` SQLite database (see config/database.yml). The
+# namespace is per environment so development data never pollutes production.
+default: &default
+  store_options:
+    # Provider responses are small; 30 days keeps the risk history queryable
+    # without letting the cache database grow unbounded.
+    max_age: <%= 30.days.to_i %>
+    max_size: <%= 512.megabytes %>
+    namespace: <%= Rails.env %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------
+# Verkaufspreis-Kalkulationsplattform - API (Rails 8, API-only)
+#
+# Runs entirely on file based infrastructure: SQLite for data, Solid Cache for
+# caching and Solid Queue for background jobs. No PostgreSQL, no Redis, no
+# Docker required.
+# ---------------------------------------------------------------------------
+source 'https://rubygems.org'
+
+ruby '>= 3.3.0'
+
+gem 'rails', '~> 8.0'
+gem 'sqlite3', '~> 2.6'
+gem 'puma', '>= 6.4'
+
+# Rails 8 database backed infrastructure (replaces Redis + Sidekiq)
+gem 'solid_cache', '~> 1.0'
+gem 'solid_queue', '~> 1.0'
+
+# --- Authentication / security -------------------------------------------------
+gem 'bcrypt', '~> 3.1'
+gem 'jwt', '~> 3.1'
+gem 'rack-attack', '~> 6.7'
+gem 'rack-cors', '~> 2.0'
+
+# --- Outbound HTTP for the risk provider adapters ------------------------------
+gem 'faraday', '~> 2.12'
+gem 'faraday-follow_redirects', '~> 0.4'
+gem 'faraday-retry', '~> 2.3'
+
+# --- Validation of external provider payloads and import documents -------------
+gem 'json_schemer', '~> 2.4'
+
+# --- Exports -------------------------------------------------------------------
+gem 'caxlsx', '~> 4.1'
+gem 'csv', '~> 3.3'
+gem 'prawn', '~> 2.5'
+gem 'prawn-table', '~> 0.2'
+
+# --- Misc ----------------------------------------------------------------------
+# Rails 8.1's ActiveSupport::JSON.decode still calls `JSON.parse(str, options)`;
+# json 3.0 removed that second positional argument, which breaks every `t.json`
+# column. Pin the 2.x line until Rails adapts.
+gem 'json', '~> 2.9'
+gem 'bootsnap', require: false
+gem 'tzinfo-data', platforms: %i[windows jruby]
+
+group :development, :test do
+  gem 'brakeman', require: false
+  gem 'debug', platforms: %i[mri windows], require: 'debug/prelude'
+  gem 'dotenv-rails', '~> 3.1'
+  gem 'factory_bot_rails', '~> 6.4'
+  gem 'faker', '~> 3.5'
+  gem 'rspec-rails', '~> 8.0'
+  gem 'rubocop-rails-omakase', require: false
+  gem 'vcr', '~> 6.3'
+  gem 'webmock', '~> 3.25'
+end
+
+group :test do
+  gem 'simplecov', '~> 0.22', require: false
+end

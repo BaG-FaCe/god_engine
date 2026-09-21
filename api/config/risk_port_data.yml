@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------------------
+# Port congestion reference data.
+#
+# Published average container waiting times (hours) per port plus a country level
+# congestion factor. Maintained as data so it can be refreshed from the UNESCAP /
+# World Bank port waiting time database (or an internal terminal report) without
+# a code change - a rake task or an admin import rewrites this file.
+#
+# `waitingHours` is the average vessel waiting time before berthing.
+# `trend` is rising | stable | falling and adds a forward-looking penalty.
+# ---------------------------------------------------------------------------
+baselineWaitingHours: 24
+
+ports:
+  shanghai: { name: Shanghai, waitingHours: 30, trend: stable }
+  ningbo: { name: Ningbo-Zhoushan, waitingHours: 34, trend: rising }
+  shenzhen: { name: Shenzhen, waitingHours: 22, trend: stable }
+  singapore: { name: Singapore, waitingHours: 14, trend: stable }
+  busan: { name: Busan, waitingHours: 16, trend: stable }
+  hongkong: { name: Hong Kong, waitingHours: 20, trend: falling }
+  rotterdam: { name: Rotterdam, waitingHours: 18, trend: stable }
+  hamburg: { name: Hamburg, waitingHours: 26, trend: rising }
+  antwerp: { name: Antwerpen, waitingHours: 21, trend: stable }
+  bremerhaven: { name: Bremerhaven, waitingHours: 24, trend: stable }
+  lehavre: { name: Le Havre, waitingHours: 28, trend: rising }
+  valencia: { name: Valencia, waitingHours: 19, trend: stable }
+  genoa: { name: Genua, waitingHours: 32, trend: rising }
+  piraeus: { name: Piraeus, waitingHours: 17, trend: stable }
+  jebelali: { name: Jebel Ali, waitingHours: 23, trend: stable }
+  losangeles: { name: Los Angeles, waitingHours: 41, trend: rising }
+  longbeach: { name: Long Beach, waitingHours: 44, trend: rising }
+  newyork: { name: New York, waitingHours: 33, trend: stable }
+  santos: { name: Santos, waitingHours: 62, trend: rising }
+  durban: { name: Durban, waitingHours: 71, trend: rising }
+  mumbai: { name: Nhava Sheva, waitingHours: 36, trend: stable }
+  chennai: { name: Chennai, waitingHours: 29, trend: stable }
+  portklang: { name: Port Klang, waitingHours: 25, trend: stable }
+  tanjungpelepas: { name: Tanjung Pelepas, waitingHours: 21, trend: stable }
+  kaohsiung: { name: Kaohsiung, waitingHours: 27, trend: stable }
+  tokyo: { name: Tokyo, waitingHours: 15, trend: stable }
+  yokohama: { name: Yokohama, waitingHours: 14, trend: stable }
+  melbourne: { name: Melbourne, waitingHours: 38, trend: rising }
+  sydney: { name: Sydney, waitingHours: 31, trend: stable }
+  vancouver: { name: Vancouver, waitingHours: 35, trend: rising }
+
+# Country level congestion factor applied when no port can be resolved from the
+# shipping route. 1.0 is neutral, values above 1.0 mean structurally slower ports.
+countryCongestion:
+  CN: 1.15
+  IN: 1.25
+  BR: 1.6
+  ZA: 1.75
+  US: 1.3
+  TR: 1.1
+  IT: 1.2
+  DE: 0.9
+  NL: 0.85
+  ES: 0.95
+  SG: 0.7
+  JP: 0.7
+  KR: 0.75
+  BE: 0.9
+  GR: 1.05
+  MX: 1.4

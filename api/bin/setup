@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# One shot setup: install gems, prepare all three SQLite databases, seed data.
+require 'fileutils'
+APP_ROOT = File.expand_path('..', __dir__)
+Dir.chdir(APP_ROOT)
+
+puts '== Installing gems =='
+system('bundle install', exception: true) || abort('bundle install failed')
+
+puts '== Preparing databases (primary, cache, queue) =='
+system('bin/rails db:prepare', exception: true) || abort('db:prepare failed')
+
+puts '== Reloading schema cache =='
+system('bin/rails db:schema:cache:dump') if Rails.env.development? rescue nil
+
+puts '== Seeding demo data =='
+system('bin/rails db:seed', exception: true) || abort('db:seed failed')
+
+puts "\nDone. Start the API with:   cd api && bin/rails server"
+puts 'Start the SPA with:         cd web && npm run dev'

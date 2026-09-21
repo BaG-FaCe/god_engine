@@ -1,0 +1,191 @@
+# ---------------------------------------------------------------------------
+# Reference data used by the open-data provider adapters.
+#
+# Kept as data so it can be extended (or replaced by a customer-specific list)
+# without touching any provider code.
+# ---------------------------------------------------------------------------
+
+# Representative centroid per ISO-3166 alpha-2 code. Used when a provider needs a
+# coordinate but the material only carries a country. Covers the sourcing regions
+# that dominate European supply chains; unknown codes yield no coordinate and the
+# provider degrades gracefully.
+countryCentroids:
+  DE: [51.16, 10.45]
+  AT: [47.52, 14.55]
+  CH: [46.82, 8.23]
+  FR: [46.60, 1.89]
+  IT: [41.87, 12.57]
+  ES: [40.46, -3.75]
+  NL: [52.13, 5.29]
+  BE: [50.50, 4.47]
+  PL: [51.92, 19.15]
+  CZ: [49.82, 15.47]
+  SK: [48.67, 19.70]
+  HU: [47.16, 19.50]
+  RO: [45.94, 24.97]
+  SE: [60.13, 18.64]
+  FI: [61.92, 25.75]
+  DK: [56.26, 9.50]
+  NO: [60.47, 8.47]
+  PT: [39.40, -8.22]
+  GB: [55.38, -3.44]
+  IE: [53.41, -8.24]
+  TR: [38.96, 35.24]
+  CN: [35.86, 104.20]
+  JP: [36.20, 138.25]
+  KR: [35.91, 127.77]
+  TW: [23.70, 120.96]
+  IN: [20.59, 78.96]
+  VN: [14.06, 108.28]
+  TH: [15.87, 100.99]
+  MY: [4.21, 101.98]
+  SG: [1.35, 103.82]
+  ID: [-0.79, 113.92]
+  PH: [12.88, 121.77]
+  MX: [23.63, -102.55]
+  BR: [-14.24, -51.93]
+  US: [37.09, -95.71]
+  CA: [56.13, -106.35]
+  AR: [-38.42, -63.62]
+  CL: [-35.68, -71.54]
+  ZA: [-30.56, 22.94]
+  EG: [26.82, 30.80]
+  MA: [31.79, -7.09]
+  TN: [33.89, 9.54]
+  AE: [23.42, 53.85]
+  SA: [23.89, 45.08]
+  IL: [31.05, 34.85]
+  RU: [61.52, 105.32]
+  UA: [48.38, 31.17]
+  BY: [53.71, 27.95]
+  RS: [44.02, 21.01]
+  BG: [42.73, 25.49]
+  GR: [39.07, 21.82]
+  AU: [-25.27, 133.78]
+  NZ: [-40.90, 174.89]
+
+# Major container ports so a free-text shipping route can be resolved into the
+# coordinates a weather or congestion source needs.
+portCoordinates:
+  shanghai: [31.23, 121.47]
+  ningbo: [29.87, 121.55]
+  shenzhen: [22.54, 114.06]
+  singapore: [1.29, 103.85]
+  busan: [35.10, 129.04]
+  hongkong: [22.32, 114.17]
+  rotterdam: [51.92, 4.48]
+  hamburg: [53.55, 9.99]
+  antwerp: [51.22, 4.40]
+  bremerhaven: [53.54, 8.58]
+  lehavre: [49.49, 0.11]
+  valencia: [39.45, -0.33]
+  genoa: [44.41, 8.93]
+  piraeus: [37.94, 23.62]
+  jebelali: [25.00, 55.06]
+  losangeles: [33.74, -118.27]
+  longbeach: [33.77, -118.19]
+  newyork: [40.71, -74.01]
+  santos: [-23.96, -46.33]
+  durban: [-29.86, 31.03]
+  mumbai: [18.94, 72.84]
+  chennai: [13.08, 80.27]
+  portklang: [3.00, 101.40]
+  tanjungpelepas: [1.36, 103.55]
+  kaohsiung: [22.62, 120.30]
+  tokyo: [35.68, 139.69]
+  yokohama: [35.44, 139.64]
+  melbourne: [-37.81, 144.96]
+  sydney: [-33.87, 151.21]
+  vancouver: [49.28, -123.12]
+
+# Normalised country name -> ISO-3166 alpha-2. Only the regions that actually
+# appear in European supply chains plus the common German spellings.
+countryNames:
+  germany: DE
+  deutschland: DE
+  austria: AT
+  osterreich: AT
+  switzerland: CH
+  schweiz: CH
+  france: FR
+  frankreich: FR
+  italy: IT
+  italien: IT
+  spain: ES
+  spanien: ES
+  netherlands: NL
+  niederlande: NL
+  belgium: BE
+  belgien: BE
+  poland: PL
+  polen: PL
+  czechia: CZ
+  czechrepublic: CZ
+  tschechien: CZ
+  slovakia: SK
+  hungary: HU
+  ungarn: HU
+  romania: RO
+  rumanien: RO
+  sweden: SE
+  schweden: SE
+  finland: FI
+  finnland: FI
+  denmark: DK
+  danemark: DK
+  norway: NO
+  norwegen: NO
+  portugal: PT
+  unitedkingdom: GB
+  greatbritain: GB
+  ireland: IE
+  irland: IE
+  turkey: TR
+  turkiye: TR
+  china: CN
+  japan: JP
+  southkorea: KR
+  republicofkorea: KR
+  taiwan: TW
+  india: IN
+  indien: IN
+  vietnam: VN
+  thailand: TH
+  malaysia: MY
+  singapore: SG
+  indonesia: ID
+  philippines: PH
+  mexico: MX
+  mexiko: MX
+  brazil: BR
+  brasilien: BR
+  unitedstates: US
+  unitedstatesofamerica: US
+  usa: US
+  vereinigtestaaten: US
+  canada: CA
+  kanada: CA
+  argentina: AR
+  chile: CL
+  southafrica: ZA
+  sudafrika: ZA
+  egypt: EG
+  agypten: EG
+  morocco: MA
+  marokko: MA
+  tunisia: TN
+  tunesien: TN
+  unitedarabemirates: AE
+  saudiarabia: SA
+  israel: IL
+  russia: RU
+  ukraine: UA
+  belarus: BY
+  serbia: RS
+  bulgaria: BG
+  greece: GR
+  griechenland: GR
+  australia: AU
+  australien: AU
+  newzealand: NZ
+  neuseeland: NZ

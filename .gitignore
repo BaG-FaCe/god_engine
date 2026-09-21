@@ -1,56 +1,55 @@
-*.gem
-*.rbc
-/.config
-/coverage/
-/InstalledFiles
-/pkg/
-/spec/reports/
-/spec/examples.txt
-/test/tmp/
-/test/version_tmp/
+# ---- Ruby / Rails ----
+api/.bundle/
+api/log/*.log
+api/log/*.log.*
+api/tmp/**/*
+api/storage/**/*
+!api/storage/.keep
+api/public/assets/
+api/public/packs/
+api/vendor/bundle/
+api/coverage/
+api/.env
+api/.env.*
+api/config/master.key
+api/config/credentials/*.key
+
+# SQLite databases and their journals
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+
+# ---- Node / Vite ----
+web/node_modules/
+web/dist/
+web/dist-ssa/
+web/.vite/
+web/coverage/
+web/playwright-report/
+web/test-results/
+web/.eslintcache
+web/*.tsbuildinfo
+
+# ---- Editors / OS ----
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Local dev tooling ----
+.dev-tools/ca-bundle.pem
+.dev-tools/*.log
+.dev-notes/
+/server.log
+
+# ---- Generated artifacts ----
+exports/
 /tmp/
 
-# Used by dotenv library to load environment variables.
-# .env
-
-# Ignore Byebug command history file.
-.byebug_history
-
-## Specific to RubyMotion:
-.dat*
-.repl_history
-build/
-*.bridgesupport
-build-iPhoneOS/
-build-iPhoneSimulator/
-
-## Specific to RubyMotion (use of CocoaPods):
-#
-# We recommend against adding the Pods directory to your .gitignore. However
-# you should judge for yourself, the pros and cons are mentioned at:
-# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
-#
-# vendor/Pods/
-
-## Documentation cache and generated files:
-/.yardoc/
-/_yardoc/
-/doc/
-/rdoc/
-
-## Environment normalization:
-/.bundle/
-/vendor/bundle
-/lib/bundler/man/
-
-# for a library or gem, you might want to ignore these files since the code is
-# intended to run in multiple environments; otherwise, check them in:
-# Gemfile.lock
-# .ruby-version
-# .ruby-gemset
-
-# unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
-.rvmrc
-
-# Used by RuboCop. Remote config files pulled in from inherit_from directive.
-# .rubocop-https?--*
+# ---- Keep-placeholders so a fresh clone has the directory layout ----
+!api/storage/.keep
+!api/log/.keep
+!api/tmp/.keep

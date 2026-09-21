@@ -1,0 +1,41 @@
+# Recurring (cron-like) jobs.
+#
+# Every entry is a task of the surviving `bin/jobs` / Puma Solid Queue worker.
+# Natural language schedules are evaluated by Fugit.
+shared: &shared
+  # Open-data provider polling. The intervals are chosen to stay far below the
+  # free-tier rate limits of the respective APIs.
+  poll_disaster_alerts:
+    command: 'SupplyChainRisk::PollDisasterAlertsJob.perform_later'
+    schedule: every 30 minutes
+    queue: risk_polling
+  sync_freight_index:
+    command: 'SupplyChainRisk::SyncFreightIndexJob.perform_later'
+    schedule: every 6 hours
+    queue: risk_polling
+  refresh_risk_assessments:
+    command: 'SupplyChainRisk::RefreshRiskAssessmentsJob.perform_later'
+    schedule: every 12 hours
+    queue: risk_polling
+  refresh_sanctions_lists:
+    command: 'SupplyChainRisk::RefreshSanctionsListJob.perform_later'
+    schedule: every day at 4am
+    queue: risk_polling
+  # Housekeeping.
+  purge_expired_risk_assessments:
+    command: 'SupplyChainRisk::PurgeExpiredAssessmentsJob.perform_later'
+    schedule: every day at 3am
+    queue: maintenance
+  recompute_risk_surcharges:
+    command: 'Calculator::RecomputeRiskSurchargesJob.perform_later'
+    schedule: every day at 5am
+    queue: maintenance
+
+development:
+  <<: *shared
+
+test:
+  <<: *shared
+
+production:
+  <<: *shared

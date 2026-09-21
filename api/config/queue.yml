@@ -1,0 +1,25 @@
+# Solid Queue worker/dispatcher configuration.
+#
+# Threads are cheap and mostly IO bound (external HTTP calls to the risk
+# providers), so a single process with several threads is enough. Increase
+# `JOB_CONCURRENCY` (processes) on Linux/macOS when the provider polling load
+# grows.
+default: &default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+      concurrency_maintenance_interval: 300
+  workers:
+    - queues: '*'
+      threads: <%= ENV.fetch('QUEUE_THREADS', 5) %>
+      processes: <%= ENV.fetch('JOB_CONCURRENCY', 1) %>
+      polling_interval: 0.5
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

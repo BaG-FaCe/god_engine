@@ -1,0 +1,449 @@
+# ---------------------------------------------------------------------------
+# Catalogue of every supply chain risk data source the platform can use.
+#
+# This is DATA, not code, on purpose:
+#   * `GET /api/v1/risk_providers` lists all of it, so an operator sees what the
+#     platform is capable of - not only what is switched on
+#   * adding a vendor is a data change (plus an optional mapping override), never
+#     a change to the aggregation logic
+#   * rate limits and cache TTLs live here, which is the only place where
+#     "do not exhaust the free tier" is enforced
+#
+# `envKeys` documents which variables a source reads. A source counts as
+# "configured" as soon as one of them is present - or immediately when
+# `requiresApiKey` is false.
+# ---------------------------------------------------------------------------
+providers:
+  # ============================ FREE / OPEN DATA ============================
+  - key: world_bank_lpi
+    name: World Bank Logistics Performance Index
+    tier: free
+    category: open_data
+    class: FreeData::WorldBankLpiProvider
+    docsUrl: https://lpi.worldbank.org/
+    requiresApiKey: false
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [logistics]
+    description: Logistics performance and customs/infrastructure scores per country.
+    costNote: Kostenlos, keine Registrierung.
+
+  - key: gdacs
+    name: GDACS Disaster Alerts
+    tier: free
+    category: open_data
+    class: FreeData::GdacsProvider
+    docsUrl: https://www.gdacs.org/
+    requiresApiKey: false
+    cacheTtlMinutes: 30
+    rateLimitPerMinute: 20
+    dimensions: [weather, operational]
+    description: EU/JRC disaster feed with alert levels for affected countries.
+    costNote: Kostenlos.
+
+  - key: usgs_earthquake
+    name: USGS Earthquake Hazards
+    tier: free
+    category: open_data
+    class: FreeData::UsgsEarthquakeProvider
+    docsUrl: https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
+    requiresApiKey: false
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 60
+    dimensions: [weather, operational]
+    description: Real-time earthquake feed for production and port regions.
+    costNote: Kostenlos.
+
+  - key: open_meteo
+    name: Open-Meteo Weather
+    tier: free
+    category: open_data
+    class: FreeData::OpenMeteoProvider
+    docsUrl: https://open-meteo.com/en/docs
+    requiresApiKey: false
+    cacheTtlMinutes: 120
+    rateLimitPerMinute: 60
+    dimensions: [weather, logistics]
+    description: Forecast and severe weather signals for origin and destination.
+    costNote: Kostenlos bis 10.000 Anfragen/Tag (nicht-kommerziell).
+
+  - key: ecb_fx
+    name: ECB / Frankfurter FX Rates
+    tier: free
+    category: open_data
+    class: FreeData::EcbExchangeRateProvider
+    docsUrl: https://frankfurter.dev/
+    requiresApiKey: false
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 60
+    dimensions: [financial]
+    description: ECB reference rates and volatility as a currency risk proxy.
+    costNote: Kostenlos.
+
+  - key: eu_sanctions
+    name: EU Consolidated Sanctions List
+    tier: free
+    category: customs
+    class: FreeData::EuSanctionsProvider
+    docsUrl: https://data.europa.eu/data/datasets/consolidated-list-of-persons-groups-and-entities-subject-to-eu-financial-sanctions
+    requiresApiKey: false
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 10
+    dimensions: [compliance, geopolitical]
+    description: EU sanctions list, cached locally and matched against supplier names.
+    costNote: Kostenlos, offene Daten der EU.
+
+  - key: eu_taric
+    name: EU TARIC Trade Measures
+    tier: free
+    category: customs
+    class: FreeData::EuTaricProvider
+    docsUrl: https://ec.europa.eu/taxation_customs/dds2/taric/taric_consultation.jsp
+    requiresApiKey: false
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [customs, compliance]
+    description: Duty rates, anti-dumping measures and import restrictions per HS code.
+    costNote: Kostenlos.
+
+  - key: port_congestion
+    name: Open Port Congestion Indicators
+    tier: free
+    category: open_data
+    class: FreeData::PortCongestionProvider
+    docsUrl: https://www.unescap.org/our-work/transport/port-waiting-time-database
+    requiresApiKey: false
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 30
+    dimensions: [logistics, operational]
+    description: Published port waiting-time statistics as a congestion proxy.
+    costNote: Kostenlos (UNESCAP / World Bank).
+
+  - key: freightos_fbx
+    name: Freightos Baltic Index (FBX)
+    tier: free
+    category: open_data
+    class: FreeData::FreightosFbxProvider
+    docsUrl: https://www.freightos.com/global-freight-index/
+    requiresApiKey: true
+    envKeys: [FREIGHTOS_API_KEY]
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 20
+    dimensions: [logistics, financial]
+    description: Container spot rates per trade lane; early capacity-shortage indicator.
+    costNote: Kostenloser Tarif mit Registrierung.
+
+  - key: fred_economic
+    name: FRED Economic Series (St. Louis Fed)
+    tier: free
+    category: financial
+    class: FreeData::FredEconomicProvider
+    docsUrl: https://fred.stlouisfed.org/docs/api/fred/
+    requiresApiKey: true
+    envKeys: [FRED_API_KEY]
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 60
+    dimensions: [financial]
+    description: Producer price and freight cost indices used for price-spike detection.
+    costNote: Kostenloser API-Key, 120 Anfragen/Minute.
+
+  - key: openweather_alerts
+    name: OpenWeatherMap Severe Weather
+    tier: free
+    category: open_data
+    class: FreeData::OpenWeatherAlertsProvider
+    docsUrl: https://openweathermap.org/api/one-call-3
+    requiresApiKey: true
+    envKeys: [OPENWEATHER_API_KEY]
+    cacheTtlMinutes: 120
+    rateLimitPerMinute: 30
+    dimensions: [weather]
+    description: Official severe weather warnings for a coordinate.
+    costNote: Kostenloser Tarif, 1.000 Aufrufe/Tag.
+
+  # ===================== PAID SCRM / VISIBILITY PROVIDERS ===================
+  # Every one is optional. Without a key the adapter reports itself as
+  # "not configured" and the free/open-data path is used instead.
+  - key: project44
+    name: project44
+    tier: paid
+    category: visibility
+    class: PaidData::Project44Adapter
+    docsUrl: https://developers.project44.com/
+    requiresApiKey: true
+    envKeys: [PROJECT44_API_KEY, PROJECT44_API_SECRET]
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 60
+    dimensions: [logistics, operational]
+    description: Real-time multimodal visibility, lane performance, ETA accuracy.
+    costNote: Enterprise-Vertrag nach Sendungsvolumen.
+
+  - key: fourkites
+    name: FourKites
+    tier: paid
+    category: visibility
+    class: PaidData::FourkitesAdapter
+    docsUrl: https://docs.fourkites.com/
+    requiresApiKey: true
+    envKeys: [FOURKITES_API_KEY]
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 60
+    dimensions: [logistics, operational]
+    description: Visibility with dwell times, detention and lane analytics.
+    costNote: Enterprise-Vertrag.
+
+  - key: maersk
+    name: Maersk APIs
+    tier: paid
+    category: tracking
+    class: PaidData::MaerskAdapter
+    docsUrl: https://developer.maersk.com/
+    requiresApiKey: true
+    envKeys: [MAERSK_API_KEY]
+    cacheTtlMinutes: 120
+    rateLimitPerMinute: 30
+    dimensions: [logistics]
+    description: Ocean schedule, container tracking, port call reliability.
+    costNote: Kostenlos nach Registrierung, Kontingente je Kunde.
+
+  - key: flexport
+    name: Flexport
+    tier: paid
+    category: visibility
+    class: PaidData::FlexportAdapter
+    docsUrl: https://developers.flexport.com/
+    requiresApiKey: true
+    envKeys: [FLEXPORT_API_KEY]
+    cacheTtlMinutes: 120
+    rateLimitPerMinute: 30
+    dimensions: [logistics, customs]
+    description: Forwarding visibility, customs status, landed cost estimates.
+    costNote: Nur für Flexport-Kunden.
+
+  - key: shippeo
+    name: Shippeo
+    tier: paid
+    category: visibility
+    class: PaidData::ShippeoAdapter
+    docsUrl: https://www.shippeo.com/
+    requiresApiKey: true
+    envKeys: [SHIPPEO_API_KEY]
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 60
+    dimensions: [logistics, operational]
+    description: Europäische Road/Rail-Visibility und ETA-Prognose.
+    costNote: Enterprise-Vertrag.
+
+  - key: ocean_insights
+    name: Ocean Insights (Sea Intelligence)
+    tier: paid
+    category: tracking
+    class: PaidData::OceanInsightsAdapter
+    docsUrl: https://www.ocean-insights.com/
+    requiresApiKey: true
+    envKeys: [OCEAN_INSIGHTS_API_KEY]
+    cacheTtlMinutes: 180
+    rateLimitPerMinute: 30
+    dimensions: [logistics, operational]
+    description: Schedule reliability, blank sailings, rollover rates je Trade Lane.
+    costNote: Abonnement.
+
+  - key: vizion
+    name: Vizion Container Tracking
+    tier: paid
+    category: tracking
+    class: PaidData::VizionAdapter
+    docsUrl: https://docs.vizionapi.com/
+    requiresApiKey: true
+    envKeys: [VIZION_API_KEY]
+    cacheTtlMinutes: 120
+    rateLimitPerMinute: 60
+    dimensions: [logistics]
+    description: Container-Tracking für alle großen Ocean-Carrier.
+    costNote: Preis je Sendung.
+
+  # --- Risk Intelligence Plattformen ---------------------------------------
+  - key: everstream
+    name: Everstream Analytics
+    tier: paid
+    category: risk_intelligence
+    class: PaidData::EverstreamAdapter
+    docsUrl: https://www.everstream.ai/
+    requiresApiKey: true
+    envKeys: [EVERSTREAM_API_KEY]
+    cacheTtlMinutes: 360
+    rateLimitPerMinute: 30
+    dimensions: [logistics, geopolitical, weather, financial, operational]
+    description: Predictive supplier, weather, labour and geopolitical risk scores.
+    costNote: Enterprise-Abonnement.
+
+  - key: resilinc
+    name: Resilinc
+    tier: paid
+    category: risk_intelligence
+    class: PaidData::ResilincAdapter
+    docsUrl: https://www.resilinc.com/
+    requiresApiKey: true
+    envKeys: [RESILINC_API_KEY]
+    cacheTtlMinutes: 360
+    rateLimitPerMinute: 30
+    dimensions: [operational, geopolitical, financial]
+    description: Multi-Tier-Lieferantenmapping und ereignisbasierte Alarme.
+    costNote: Enterprise-Abonnement.
+
+  - key: riskmethods
+    name: riskmethods
+    tier: paid
+    category: risk_intelligence
+    class: PaidData::RiskmethodsAdapter
+    docsUrl: https://www.riskmethods.net/
+    requiresApiKey: true
+    envKeys: [RISK_METHODS_API_KEY]
+    cacheTtlMinutes: 360
+    rateLimitPerMinute: 30
+    dimensions: [operational, geopolitical, financial, compliance]
+    description: Supplier risk scoring, early warning radar, compliance monitoring.
+    costNote: Enterprise-Abonnement.
+
+  - key: interos
+    name: Interos
+    tier: paid
+    category: risk_intelligence
+    class: PaidData::InterosAdapter
+    docsUrl: https://www.interos.ai/
+    requiresApiKey: true
+    envKeys: [INTEROS_API_KEY]
+    cacheTtlMinutes: 360
+    rateLimitPerMinute: 30
+    dimensions: [operational, financial, compliance, geopolitical]
+    description: KI-basiertes Multi-Tier-Risiko- und Resilienz-Scoring.
+    costNote: Enterprise-Abonnement.
+
+  - key: prewave
+    name: Prewave
+    tier: paid
+    category: risk_intelligence
+    class: PaidData::PrewaveAdapter
+    docsUrl: https://www.prewave.com/
+    requiresApiKey: true
+    envKeys: [PREWAVE_API_KEY]
+    cacheTtlMinutes: 360
+    rateLimitPerMinute: 30
+    dimensions: [compliance, operational, geopolitical]
+    description: ESG-, Menschenrechts- und Compliance-Alerts (LkSG-tauglich).
+    costNote: Abonnement, gestaffelt nach Lieferantenzahl.
+
+  # --- Financial / firmographic --------------------------------------------
+  - key: dun_bradstreet
+    name: Dun & Bradstreet
+    tier: paid
+    category: financial
+    class: PaidData::DunBradstreetAdapter
+    docsUrl: https://developer.dnb.com/
+    requiresApiKey: true
+    envKeys: [DUN_BRADSTREET_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [financial, operational]
+    description: D-U-N-S-Firmographics, Finanzstärke und Insolvenzrisiko.
+    costNote: Preis je Abfrage.
+
+  - key: moodys
+    name: Moody's Ratings & Credit
+    tier: paid
+    category: financial
+    class: PaidData::MoodysAdapter
+    docsUrl: https://www.moodys.com/
+    requiresApiKey: true
+    envKeys: [MOODY_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [financial]
+    description: Ratings und Ausfallwahrscheinlichkeiten großer Lieferanten.
+    costNote: Abonnement.
+
+  - key: rapid_ratings
+    name: RapidRatings
+    tier: paid
+    category: financial
+    class: PaidData::RapidRatingsAdapter
+    docsUrl: https://www.rapidratings.com/
+    requiresApiKey: true
+    envKeys: [RAPID_RATINGS_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [financial]
+    description: Financial Health Scores (FHR) für private und öffentliche Lieferanten.
+    costNote: Abonnement.
+
+  # --- Customs / Trade Compliance ------------------------------------------
+  - key: descartes
+    name: Descartes Customs & Trade
+    tier: paid
+    category: customs
+    class: PaidData::DescartesAdapter
+    docsUrl: https://www.descartes.com/
+    requiresApiKey: true
+    envKeys: [DESCARTES_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [customs, compliance]
+    description: Restricted-Party-Screening, Tarif- und Trade-Compliance-Inhalte.
+    costNote: Abonnement.
+
+  - key: amber_road
+    name: Amber Road (e2open)
+    tier: paid
+    category: customs
+    class: PaidData::AmberRoadAdapter
+    docsUrl: https://www.e2open.com/
+    requiresApiKey: true
+    envKeys: [AMBER_ROAD_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [customs, compliance]
+    description: Global Trade Management - Screening, Tarife, FTA-Inhalte.
+    costNote: Abonnement.
+
+  - key: oneclear
+    name: Thomson Reuters ONESOURCE Global Trade
+    tier: paid
+    category: customs
+    class: PaidData::OneClearAdapter
+    docsUrl: https://www.thomsonreuters.com/en/products-services/taxation/onesource-global-trade.html
+    requiresApiKey: true
+    envKeys: [THOMSON_REUTERS_ONECLEAR_API_KEY]
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 30
+    dimensions: [customs, compliance]
+    description: Denied-Party-Screening und globale Trade-Inhalte.
+    costNote: Abonnement.
+
+  # =================== INTERNAL - always available, no vendor ===============
+  - key: heuristic
+    name: Internes Risiko-Heuristikmodell
+    tier: internal
+    category: open_data
+    class: Internal::HeuristicProvider
+    docsUrl: null
+    requiresApiKey: false
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 0
+    dimensions: [logistics, operational, weather]
+    description: Bewertet Liefertreue, Transportmodus, Einzelquellen, Lieferzeit und
+      Frachtraten-Trend aus den projektinternen Daten. Immer verfügbare Basis.
+    costNote: Keine Kosten - rein aus eigenen Daten berechnet.
+
+  - key: manual
+    name: Manuelle Risikobewertung
+    tier: internal
+    category: open_data
+    class: Internal::ManualProvider
+    docsUrl: null
+    requiresApiKey: false
+    cacheTtlMinutes: 0
+    rateLimitPerMinute: 0
+    dimensions: [operational]
+    description: Übernimmt die von Fachanwendern gepflegte Ampel (grün/gelb/rot) als
+      Fallback, wenn keine externen Daten verfügbar oder gewünscht sind.
+    costNote: Keine Kosten.

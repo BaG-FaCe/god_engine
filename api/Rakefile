@@ -1,0 +1,7 @@
+require_relative 'config/environment'
+
+if Rails.env.development?
+  Rails.application.load_tasks
+else
+  Rails.application.load_tasks
+end
