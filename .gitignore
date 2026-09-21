@@ -11,6 +11,7 @@ api/vendor/bundle/
 api/coverage/
 api/.env
 api/.env.*
+!api/.env.example
 api/config/master.key
 api/config/credentials/*.key
 
