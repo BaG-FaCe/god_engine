@@ -40,6 +40,7 @@ module SupplyChainRisk
           record.title = title
           record.occurred_at = occurred_at
         end
+        is_new = event.new_record?
 
         event.assign_attributes(
           severity: severity,
@@ -50,6 +51,11 @@ module SupplyChainRisk
           project_id: project_id
         )
         event.save! if event.new_record? || event.changed?
+
+        # In-app notification for every *new* early-warning signal
+        # (spec § Lieferrisiko-Management). Re-polls of the same feed update
+        # nothing and therefore notify nobody.
+        Application::NotifyRiskAlert.for_event!(event) if is_new
 
         event
       rescue ActiveRecord::RecordNotUnique

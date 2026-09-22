@@ -26,7 +26,7 @@ countryCentroids:
   SE: [60.13, 18.64]
   FI: [61.92, 25.75]
   DK: [56.26, 9.50]
-  NO: [60.47, 8.47]
+  'NO': [60.47, 8.47]
   PT: [39.40, -8.22]
   GB: [55.38, -3.44]
   IE: [53.41, -8.24]
@@ -133,8 +133,8 @@ countryNames:
   finnland: FI
   denmark: DK
   danemark: DK
-  norway: NO
-  norwegen: NO
+  norway: 'NO'
+  norwegen: 'NO'
   portugal: PT
   unitedkingdom: GB
   greatbritain: GB
@@ -189,3 +189,61 @@ countryNames:
   australien: AU
   newzealand: NZ
   neuseeland: NZ
+
+# ISO-3166 alpha-2 -> UN M49 numeric reporter/partner code.
+# Used by the UN Comtrade adapter; unknown codes degrade gracefully (nil, the
+# provider reports nothing instead of querying a wrong country).
+comtradeCodes:
+  DE: 276
+  AT: 40
+  CH: 756
+  FR: 250
+  IT: 380
+  ES: 724
+  NL: 528
+  BE: 56
+  PL: 616
+  CZ: 203
+  SK: 703
+  HU: 348
+  RO: 642
+  SE: 752
+  FI: 246
+  DK: 208
+  'NO': 578
+  PT: 620
+  GB: 826
+  IE: 372
+  TR: 792
+  CN: 156
+  JP: 392
+  KR: 410
+  TW: 490
+  IN: 356
+  VN: 704
+  TH: 764
+  MY: 458
+  SG: 702
+  ID: 360
+  PH: 608
+  MX: 484
+  BR: 76
+  US: 842
+  CA: 124
+  AR: 32
+  CL: 152
+  ZA: 710
+  EG: 818
+  MA: 504
+  TN: 788
+  AE: 784
+  SA: 682
+  IL: 376
+  RU: 643
+  UA: 804
+  BY: 112
+  RS: 688
+  BG: 100
+  GR: 300
+  AU: 36
+  NZ: 554

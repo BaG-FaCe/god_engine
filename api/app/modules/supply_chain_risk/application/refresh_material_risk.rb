@@ -22,11 +22,15 @@ module SupplyChainRisk
           descriptors = Infrastructure::ProviderRegistry.active_for(project)
           descriptors = descriptors.select { |descriptor| provider_keys.include?(descriptor.key) } if provider_keys
 
+          previous_level = material.risk_level
           assessments = descriptors.filter_map do |descriptor|
             assess_with(descriptor, subject, material, project)
           end
 
           update_denormalised(material, assessments)
+          # In-app alert when the aggregated traffic light turned red
+          # (spec § Lieferrisiko-Management).
+          Application::NotifyRiskAlert.for_material!(material.reload, previous_level: previous_level)
           aggregate = AggregateProductRisk.call(project: project)
 
           Result.new(

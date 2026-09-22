@@ -42,6 +42,15 @@ module SupplyChainRisk
               names[normalise_name(raw)] || raw.upcase[0, 2]
             end
 
+            # UN M49 numeric code for the Comtrade adapter; nil when unknown so the
+            # provider reports nothing instead of querying a wrong country.
+            def comtrade_code(code)
+              iso = country_code(code)
+              return nil if iso.blank?
+
+              (data['comtradeCodes'] || {})[iso.to_s]
+            end
+
             def coordinates_for_country(code)
               centroids[country_code(code).to_s]
             end

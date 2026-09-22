@@ -77,6 +77,7 @@ Rails.application.routes.draw do
         end
       end
       resources :risk_events, only: %i[index show update]
+      resources :risk_notifications, only: %i[index show update]
       resources :cost_templates, only: %i[index show create update destroy] do
         member do
           post 'apply'

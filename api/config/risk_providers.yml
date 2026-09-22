@@ -161,6 +161,48 @@ providers:
     description: Official severe weather warnings for a coordinate.
     costNote: Kostenloser Tarif, 1.000 Aufrufe/Tag.
 
+  - key: reliefweb
+    name: ReliefWeb Disasters (OCHA)
+    tier: free
+    category: open_data
+    class: FreeData::ReliefWebProvider
+    docsUrl: https://apidoc.reliefweb.int/
+    requiresApiKey: false
+    cacheTtlMinutes: 60
+    rateLimitPerMinute: 30
+    dimensions: [weather, operational, geopolitical]
+    description: OCHA disaster feed with affected countries; complements GDACS/USGS
+      and supplies the early-warning event list.
+    costNote: Kostenlos (UN OCHA). Der Parameter `appname` ist optional, aber empfohlen.
+
+  - key: un_comtrade
+    name: UN Comtrade Trade Statistics
+    tier: free
+    category: open_data
+    class: FreeData::UnComtradeProvider
+    docsUrl: https://comtradeapi.un.org/rapidapi/docs/
+    requiresApiKey: false
+    cacheTtlMinutes: 1440
+    rateLimitPerMinute: 20
+    dimensions: [geopolitical, logistics]
+    description: Außenhandelsstatistik zwischen Herkunfts- und Zielland; plausibilisiert
+      die Lieferkette und erkennt einseitige Abhängigkeiten.
+    costNote: Kostenlos im Public-Preview-Tarif (120 Anfragen/Stunde).
+
+  - key: ofac_sdn
+    name: US Treasury OFAC SDN List
+    tier: free
+    category: customs
+    class: FreeData::OfacSdnProvider
+    docsUrl: https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV
+    requiresApiKey: false
+    cacheTtlMinutes: 720
+    rateLimitPerMinute: 10
+    dimensions: [compliance, geopolitical]
+    description: US-amerikanische SDN-Liste; wird wie die EU-Liste lokal gecacht und
+      gegen Lieferantennamen geprüft.
+    costNote: Kostenlos, offene Daten des US-Finanzministeriums.
+
   # ===================== PAID SCRM / VISIBILITY PROVIDERS ===================
   # Every one is optional. Without a key the adapter reports itself as
   # "not configured" and the free/open-data path is used instead.
