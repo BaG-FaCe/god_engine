@@ -97,6 +97,77 @@ portCoordinates:
   melbourne: [-37.81, 144.96]
   sydney: [-33.87, 151.21]
   vancouver: [49.28, -123.12]
+# UN M49 numeric codes used by the UN Comtrade public preview endpoint.
+#
+# Comtrade keys on numeric codes, not on ISO alpha-2, so this mapping is what
+# turns `materials.risk_profile.origin_country` into a query parameter. It covers
+# the trading partners that actually appear in European bill-of-materials data;
+# an unknown country makes the adapter report "no signal" instead of querying a
+# wrong partner (see `FreeData::Support.comtrade_code`).
+comtradeCodes:
+  DE: 276
+  AT: 40
+  CH: 756
+  FR: 251
+  IT: 380
+  NL: 528
+  BE: 56
+  ES: 724
+  PT: 620
+  PL: 616
+  CZ: 203
+  SK: 703
+  HU: 348
+  RO: 642
+  BG: 100
+  GR: 300
+  SE: 752
+  DK: 208
+  FI: 246
+  NO: 578
+  IE: 372
+  GB: 826
+  US: 840
+  CA: 124
+  MX: 484
+  BR: 76
+  AR: 32
+  CL: 152
+  CO: 170
+  PE: 604
+  CN: 156
+  HK: 344
+  TW: 158
+  JP: 392
+  KR: 410
+  SG: 702
+  MY: 458
+  TH: 764
+  VN: 704
+  ID: 360
+  PH: 608
+  IN: 356
+  PK: 586
+  BD: 50
+  LK: 144
+  TR: 792
+  IL: 376
+  SA: 682
+  AE: 784
+  EG: 818
+  MA: 504
+  TN: 788
+  ZA: 710
+  NG: 566
+  KE: 404
+  AU: 36
+  NZ: 554
+  RU: 643
+  UA: 804
+  BY: 112
+  RS: 688
+
+
 
 # Normalised country name -> ISO-3166 alpha-2. Only the regions that actually
 # appear in European supply chains plus the common German spellings.

@@ -9,11 +9,12 @@ module SupplyChainRisk
         next if material.risk_score.nil?
 
         RiskScoreSnapshot.upsert(
-          { material_id: material.id, captured_on: Date.current,
+          { id: SecureRandom.uuid, material_id: material.id, captured_on: Date.current,
             risk_score: material.risk_score, risk_level: material.risk_level || 'low',
             event_count: material.risk_events.since(24.hours.ago).count,
             created_at: Time.current, updated_at: Time.current },
-          unique_by: %i[material_id captured_on]
+          unique_by: %i[material_id captured_on],
+          update_only: %i[risk_score risk_level event_count updated_at]
         )
       end
       purged

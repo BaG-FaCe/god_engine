@@ -211,7 +211,7 @@ module SupplyChainRisk
 
             raw.each_with_object({}) do |(dimension, value), memo|
               dimension_key = dimension.to_s.downcase
-              next unless Domain::RiskAssessment::DIMENSION_KEYS.include?(dimension_key)
+              next unless ::RiskAssessment::DIMENSION_KEYS.include?(dimension_key)
 
               memo[dimension_key] = normalise_dimension(value)
             end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_01_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
   create_table "alternative_suppliers", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "country"
     t.datetime "created_at", null: false
@@ -284,8 +284,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000006) do
   end
 
   create_table "risk_notifications", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "acknowledged_at"
+    t.string "acknowledged_by_id"
     t.text "body"
     t.datetime "created_at", null: false
+    t.datetime "dismissed_at"
+    t.string "dismissed_by_id"
     t.string "kind", default: "risk_event", null: false
     t.string "material_id"
     t.json "payload"
@@ -296,6 +300,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000006) do
     t.string "severity", default: "medium", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["acknowledged_at"], name: "index_risk_notifications_on_acknowledged_at"
+    t.index ["dismissed_at"], name: "index_risk_notifications_on_dismissed_at"
     t.index ["project_id", "created_at"], name: "index_risk_notifications_on_project_id_and_created_at"
     t.index ["read_at"], name: "index_risk_notifications_on_read_at"
     t.index ["severity"], name: "index_risk_notifications_on_severity"

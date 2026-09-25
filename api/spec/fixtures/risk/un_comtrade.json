@@ -1,0 +1,20 @@
+{
+  "elapsedTime": "0.09 secs",
+  "count": 1,
+  "data": [
+    {
+      "typeCode": "C",
+      "freqCode": "A",
+      "refYear": 2025,
+      "period": "2025",
+      "reporterCode": 276,
+      "reporterISO": "DEU",
+      "partnerCode": 156,
+      "partnerISO": "CHN",
+      "flowCode": "M",
+      "cmdCode": "TOTAL",
+      "primaryValue": 62000000000.0,
+      "netWgt": 123456789.0
+    }
+  ]
+}

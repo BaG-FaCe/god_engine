@@ -11,6 +11,15 @@ module Api
       rescue_from ActionController::ParameterMissing, with: :render_bad_request
       rescue_from JWT::DecodeError, JWT::ExpiredSignature, with: :render_unauthorized
 
+      # Guards raise these so they *halt* the action (rendering alone does not
+      # stop execution; the previous implementation let a forbidden write fall
+      # through into a second render and a 500).
+      class NotAuthorized < StandardError; end
+      class Forbidden < StandardError; end
+
+      rescue_from NotAuthorized, with: :render_unauthorized
+      rescue_from Forbidden, with: :render_forbidden
+
       private
 
       def set_default_format
@@ -43,14 +52,12 @@ module Api
       end
 
       def authenticate_user!
-        render_unauthorized(StandardError.new('Anmeldung erforderlich')) if current_user.nil?
+        raise NotAuthorized if current_user.nil?
       end
 
       def require_write!
         authenticate_user!
-        return if current_user.can_write?
-
-        render_error('Keine Schreibberechtigung', code: 'forbidden', status: :forbidden)
+        raise Forbidden unless current_user.can_write?
       end
 
       def audit(action, auditable: nil, project: nil, changes: nil, metadata: nil)
@@ -114,6 +121,10 @@ module Api
 
       def render_unauthorized(_exception = nil)
         render_error('Ungültige oder abgelaufene Anmeldung', code: 'unauthorized', status: :unauthorized)
+      end
+
+      def render_forbidden(_exception = nil)
+        render_error('Keine Schreibberechtigung', code: 'forbidden', status: :forbidden)
       end
     end
   end

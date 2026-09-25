@@ -1,9 +1,9 @@
 import {
-  Alert, Box, Button, Card, CardActions, CardContent, Chip, Dialog, DialogActions,
+  Alert, Box, Button, Card, CardActions, CardContent, Chip, Collapse, Dialog, DialogActions,
   DialogContent, DialogTitle, FormControl, FormControlLabel, Checkbox, Grid, IconButton,
   InputLabel, MenuItem, Paper, Select, Stack, TextField, Tooltip, Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { LoadingState } from '../../../shared/components/LoadingState';
@@ -21,6 +21,8 @@ import {
 } from '../api/queries';
 import { riskApi } from '../api/risk';
 import { useMutation } from '@tanstack/react-query';
+import { useCalculatorStore } from '../store/calculator-store';
+import { MaterialRiskPanel } from '../components/MaterialRiskPanel';
 
 const TYPES: Array<{ value: MaterialType; label: string }> = [
   { value: 'raw_material', label: 'Rohmaterial' },
@@ -102,6 +104,7 @@ function toForm(material: Material): FormState {
 
 function MaterialCardView({
   material, onEdit, onDelete, onRefreshRisk, refreshing, onManual,
+  riskExpanded, onToggleRisk, cardRef,
 }: {
   material: Material;
   onEdit: () => void;
@@ -109,9 +112,12 @@ function MaterialCardView({
   onRefreshRisk: () => void;
   refreshing: boolean;
   onManual: () => void;
+  riskExpanded: boolean;
+  onToggleRisk: () => void;
+  cardRef?: (node: HTMLDivElement | null) => void;
 }) {
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} ref={cardRef}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
           <Typography variant="subtitle1" fontWeight={600}>{material.name}</Typography>
@@ -158,10 +164,16 @@ function MaterialCardView({
         </Tooltip>
         <Button size="small" onClick={onManual}>Ampel</Button>
         <Box sx={{ flexGrow: 1 }} />
+        <Button size="small" onClick={onToggleRisk} color="inherit">
+          {riskExpanded ? 'Risiko zu' : 'Risiko auf'}
+        </Button>
         <IconButton size="small" color="error" aria-label="Löschen" onClick={onDelete}>
           ✕
         </IconButton>
       </CardActions>
+      <Collapse in={riskExpanded} timeout="auto" unmountOnExit>
+        <MaterialRiskPanel materialId={material.id} />
+      </Collapse>
     </Card>
   );
 }
@@ -183,6 +195,22 @@ export function MaterialTab({ projectId }: { projectId: string }) {
   const [manualFor, setManualFor] = useState<Material | null>(null);
   const [manualLevel, setManualLevel] = useState<'green' | 'yellow' | 'red'>('yellow');
   const [manualNote, setManualNote] = useState('');
+  const [expandedRiskId, setExpandedRiskId] = useState<string | null>(null);
+
+  // Deep-link from the notification bell: expand + scroll to the target card.
+  const focusMaterialId = useCalculatorStore((state) => state.focusMaterialId);
+  const clearFocus = useCalculatorStore((state) => state.focusMaterial);
+  const cardRefs = useRef(new Map<string, HTMLDivElement | null>());
+
+  useEffect(() => {
+    if (!focusMaterialId) return;
+    setExpandedRiskId(focusMaterialId);
+    const timer = window.setTimeout(() => {
+      cardRefs.current.get(focusMaterialId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      clearFocus(null);
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [focusMaterialId, clearFocus]);
 
   const set = (patch: Partial<FormState>) => setForm((prev) => ({ ...prev, ...patch }));
 
@@ -279,6 +307,12 @@ export function MaterialTab({ projectId }: { projectId: string }) {
                 onRefreshRisk={() => refresh.mutate(material.id)}
                 refreshing={refresh.isPending && refresh.variables === material.id}
                 onManual={() => setManualFor(material)}
+                riskExpanded={expandedRiskId === material.id}
+                onToggleRisk={() => setExpandedRiskId((cur) => (cur === material.id ? null : material.id))}
+                cardRef={(node) => {
+                  if (node) cardRefs.current.set(material.id, node);
+                  else cardRefs.current.delete(material.id);
+                }}
               />
             </Grid>
           ))}

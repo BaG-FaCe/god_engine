@@ -77,7 +77,34 @@ Rails.application.routes.draw do
         end
       end
       resources :risk_events, only: %i[index show update]
-      resources :risk_notifications, only: %i[index show update]
+
+      # --- in-app risk notifications (Update-Prompt Aufgabe 2) --------------
+      # Acknowledge/dismiss are POST actions instead of DELETE/PATCH on the
+      # record itself, because nothing is ever deleted - the history stays
+      # auditable (`acknowledged_at` / `dismissed_at`).
+      resources :risk_notifications, only: %i[index show] do
+        member do
+          post 'acknowledge'
+          post 'dismiss'
+          patch 'read'
+        end
+        collection do
+          post 'read_all'
+        end
+      end
+      # Alias required by the module API design (`/api/v1/notifications`,
+      # `/api/v1/notifications/:id/acknowledge`, `.../dismiss`). Both paths hit
+      # the same controller, so the SPA can use either one.
+      resources :notifications, controller: 'risk_notifications', only: %i[index show] do
+        member do
+          post 'acknowledge'
+          post 'dismiss'
+          patch 'read'
+        end
+        collection do
+          post 'read_all'
+        end
+      end
       resources :cost_templates, only: %i[index show create update destroy] do
         member do
           post 'apply'

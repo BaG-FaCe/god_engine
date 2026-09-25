@@ -1,0 +1,22 @@
+{
+  "id": "p44-fixture-1",
+  "riskScore": 68,
+  "riskLevel": "high",
+  "leadTimeVarianceDays": 5,
+  "reason": "Lane CN->DE mit wiederholten Verspaetungen (Fixture)",
+  "dimensions": {
+    "logistics": 68,
+    "operational": 54
+  },
+  "events": [
+    {
+      "id": "p44-event-1",
+      "type": "port_congestion",
+      "severity": "high",
+      "title": "Hafenstau (Fixture)",
+      "description": "Aufnahmefixture fuer den Contract-Test des Paid-Adapters.",
+      "country": "CN",
+      "occurredAt": "2026-09-20T08:00:00Z"
+    }
+  ]
+}

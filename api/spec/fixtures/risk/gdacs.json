@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [121.47, 31.23] },
+      "properties": {
+        "eventid": 1001234,
+        "eventtype": "TC",
+        "eventname": "TYPHOON FIXTURE",
+        "name": "TYPHOON FIXTURE",
+        "alertlevel": "Orange",
+        "country": "China",
+        "fromdate": "2026-09-20T06:00:00",
+        "todate": "2026-09-26T06:00:00",
+        "datemodified": "2026-09-21T05:00:00",
+        "htmldescription": "Orange tropical cyclone alert for China (fixture)",
+        "description": "Recorded GDACS search response used by the contract tests.",
+        "severitydata": { "severity": 1.5, "severitytext": "1.5" }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [121.9, 31.0] },
+      "properties": {
+        "eventid": 1001235,
+        "eventtype": "FL",
+        "eventname": "FLOOD FIXTURE",
+        "name": "FLOOD FIXTURE",
+        "alertlevel": "Green",
+        "country": "China",
+        "fromdate": "2026-09-18T06:00:00",
+        "todate": "2026-09-22T06:00:00",
+        "datemodified": "2026-09-19T05:00:00",
+        "htmldescription": "Green flood alert for China (fixture)",
+        "description": "Second GDACS feature so deduplication has something to prove.",
+        "severitydata": { "severity": 0.2, "severitytext": "0.2" }
+      }
+    }
+  ]
+}

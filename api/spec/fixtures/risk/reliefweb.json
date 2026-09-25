@@ -1,0 +1,24 @@
+{
+  "time": 1758600000,
+  "took": 12,
+  "totalCount": 1,
+  "count": 1,
+  "data": [
+    {
+      "id": 41234,
+      "fields": {
+        "id": 41234,
+        "name": "China: Floods - Sep 2026 (fixture)",
+        "status": "ongoing",
+        "date": {
+          "created": "2026-09-19T10:00:00+00:00",
+          "changed": "2026-09-22T09:30:00+00:00"
+        },
+        "url": "https://reliefweb.int/disaster/fl-2026-000123-chn",
+        "primary_type": "Flood",
+        "description": "Recorded ReliefWeb disaster record used by the contract tests.",
+        "primary_country": { "iso3": "CHN", "name": "China" }
+      }
+    }
+  ]
+}

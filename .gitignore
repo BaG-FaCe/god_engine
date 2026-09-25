@@ -54,3 +54,7 @@ exports/
 !api/storage/.keep
 !api/log/.keep
 !api/tmp/.keep
+
+# ---- Development / CI / CD / Notes----
+.orignal_app_structure_ref.md
+.versioning.md

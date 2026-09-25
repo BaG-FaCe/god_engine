@@ -74,6 +74,18 @@ module SupplyChainRisk
         []
       end
 
+      # Bulk feeds are polled by background jobs. An unreachable upstream must
+      # degrade to "no new signals" - never to a failed job - so callers use this
+      # instead of `events` directly. The raw `events` may still raise a
+      # `JsonClient::Error`; that is the documented seam for callers that want to
+      # record the failure themselves.
+      def events_safely(since: 24.hours.ago)
+        events(since: since)
+      rescue Shared::Infrastructure::Http::JsonClient::Error => e
+        context.log(:warn, "#{key}: Ereignisabruf fehlgeschlagen", error: e.message)
+        []
+      end
+
       # Contract test used by `POST /api/v1/risk_providers/:key/probe`.
       # Should be cheap and must not write anything.
       #
@@ -98,7 +110,14 @@ module SupplyChainRisk
       end
 
       # True when the provider can answer right now (key present / open data).
+      #
+      # Resolution order matters: a key configured *per project* in
+      # `risk_provider_configs` must win over the process environment, otherwise
+      # the per-project configuration (Update-Prompt Aufgabe 1) would be ignored
+      # for every paid adapter.
       def available?
+        return context.configured? if context.respond_to?(:configured?)
+
         self.class.configured?
       end
 
@@ -132,7 +151,15 @@ module SupplyChainRisk
 
       # Builds the draft with this provider's identity pre-filled, so an adapter
       # cannot accidentally report another provider's key.
+      #
+      # When the provider had to fall back to a cached value because the upstream
+      # API was unreachable (`ProviderContext#last_read_stale?`), the draft is
+      # explicitly marked: the reason carries a "stale" note and the confidence is
+      # halved. That keeps the "never fail hard, but never pretend to be fresh
+      # either" promise (Update-Prompt Aufgabe 1).
       def draft(risk_score:, **options)
+        options = mark_stale(options) if stale_context?
+
         AssessmentDraft.build(
           provider_key: key,
           provider_name: descriptor.name,
@@ -141,6 +168,25 @@ module SupplyChainRisk
           expires_in: options.delete(:expires_in) || descriptor.cache_ttl_minutes.minutes,
           **options
         )
+      end
+
+      STALE_REASON_SUFFIX =
+        ' ⚠ Stale-Fallback: Provider derzeit nicht erreichbar, letzter bekannter Wert verwendet.'
+      STALE_CONFIDENCE_FACTOR = BigDecimal('0.5')
+
+      private
+
+      def stale_context?
+        context.respond_to?(:last_read_stale?) && context.last_read_stale?
+      end
+
+      def mark_stale(options)
+        options[:reason] = "#{options[:reason]}#{STALE_REASON_SUFFIX}".strip
+        confidence = options[:confidence]
+        if confidence
+          options[:confidence] = (BigDecimal(confidence.to_s) * STALE_CONFIDENCE_FACTOR).round(4)
+        end
+        options
       end
     end
   end

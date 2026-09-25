@@ -19,6 +19,7 @@ import { MonthlyCostsTab } from './tabs/MonthlyCostsTab';
 import { FixedCostsTab } from './tabs/FixedCostsTab';
 import { PricingTab } from './tabs/PricingTab';
 import { DashboardTab } from './tabs/DashboardTab';
+import { NotificationBell } from './components/NotificationBell';
 
 function NewProjectDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mutations = useProjectMutations();
@@ -122,6 +123,7 @@ export default function CalculatorPage() {
             />
           )}
           <Box sx={{ flexGrow: 1 }} />
+          <NotificationBell projectId={activeId} />
           <Button size="small" onClick={() => setNewOpen(true)}>+ Projekt</Button>
         </Stack>
       </Paper>

@@ -23,14 +23,18 @@ module SupplyChainRisk
           descriptors = descriptors.select { |descriptor| provider_keys.include?(descriptor.key) } if provider_keys
 
           previous_level = material.risk_level
+          previous_score = material.risk_score
           assessments = descriptors.filter_map do |descriptor|
             assess_with(descriptor, subject, material, project)
           end
 
           update_denormalised(material, assessments)
           # In-app alert when the aggregated traffic light turned red
-          # (spec § Lieferrisiko-Management).
-          Application::NotifyRiskAlert.for_material!(material.reload, previous_level: previous_level)
+          # (spec § Lieferrisiko-Management). The policy decides whether the
+          # 🔴 is actually *new* - an unchanged red stays silent.
+          Application::NotifyRiskAlert.for_material!(
+            material.reload, previous_level: previous_level, previous_score: previous_score
+          )
           aggregate = AggregateProductRisk.call(project: project)
 
           Result.new(

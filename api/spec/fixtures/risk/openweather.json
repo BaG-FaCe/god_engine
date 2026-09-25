@@ -1,0 +1,16 @@
+{
+  "lat": 31.25,
+  "lon": 121.5,
+  "timezone": "Asia/Shanghai",
+  "timezone_offset": 28800,
+  "alerts": [
+    {
+      "sender_name": "CMA",
+      "event": "Typhoon warning (fixture)",
+      "start": 1758500000,
+      "end": 1758700000,
+      "description": "Recorded OpenWeatherMap alert used by the contract tests.",
+      "tags": ["Severe"]
+    }
+  ]
+}

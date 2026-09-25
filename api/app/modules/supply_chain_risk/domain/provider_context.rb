@@ -60,14 +60,38 @@ module SupplyChainRisk
 
       # Cache helper that transparently honours the descriptor's TTL so no
       # adapter can accidentally hammer an upstream API.
+      #
+      # Stale fallback (Update-Prompt Aufgabe 1): every successful read is *also*
+      # written to a long-lived `:stale` sibling key. When the upstream API is
+      # unreachable and the fresh entry has expired, the last known value is
+      # returned instead of raising - the calculator never fails hard because a
+      # third party is down. Adapters can mark their answer as outdated through
+      # `last_read_stale?` (see `Domain::RiskDataProvider#draft`).
       def cached(namespace, key)
         cache_key = ['scr', namespace, key].join(':')
         cached_value = cache.read(cache_key)
         return cached_value unless cached_value.nil?
 
         value = yield
-        cache.write(cache_key, value, expires_in: cache_ttl) unless value.nil?
+        unless value.nil?
+          cache.write(cache_key, value, expires_in: cache_ttl)
+          cache.write(stale_cache_key(cache_key), value, expires_in: stale_cache_ttl)
+        end
         value
+      rescue Shared::Infrastructure::Http::JsonClient::Error => e
+        fallback = cache.read(stale_cache_key(cache_key))
+        raise if fallback.nil?
+
+        @last_read_stale = true
+        log(:warn, "#{namespace}:#{key} nicht erreichbar - verwende letzten bekannten Wert",
+            error: e.message)
+        fallback
+      end
+
+      # True when the most recent `cached` read had to fall back to an outdated
+      # value. Scoped to this context, which is built per provider call.
+      def last_read_stale?
+        @last_read_stale == true
       end
 
       def log(level, message, **payload)
@@ -77,6 +101,21 @@ module SupplyChainRisk
       end
 
       private
+
+      STALE_SUFFIX = ':stale'
+
+      # How much longer the "last known good" copy is retained than the fresh
+      # one. 14x a 30 min TTL is ~7 hours, 14x a 24 h TTL is two weeks - enough to
+      # survive a weekend outage without growing the cache database unbounded.
+      STALE_TTL_MULTIPLIER = 14
+
+      def stale_cache_key(cache_key)
+        "#{cache_key}#{STALE_SUFFIX}"
+      end
+
+      def stale_cache_ttl
+        cache_ttl * STALE_TTL_MULTIPLIER
+      end
 
       def env_api_key
         env_value(:key)

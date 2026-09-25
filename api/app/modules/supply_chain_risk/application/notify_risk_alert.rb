@@ -10,13 +10,16 @@ module SupplyChainRisk
     #   * `for_material!` - called by `RefreshMaterialRisk` when the aggregated
     #     traffic light flips to red (previous state is passed in by the caller)
     #
-    # Notification creation must never break the write path that produced it -
-    # a failing insert is logged and swallowed.
+    # Whether a notification is appropriate at all is decided by
+    # `Domain::NotificationPolicy` - this service only writes. Notification
+    # creation must never break the write path that produced it, so a failing
+    # insert is logged and swallowed.
     class NotifyRiskAlert
       class << self
         # A new early-warning event for a project / material.
-        def for_event!(event)
-          return unless event.persisted?
+        # @return [RiskNotification, nil]
+        def for_event!(event, policy: Domain::NotificationPolicy)
+          return nil unless policy.notify_for_event?(event)
 
           RiskNotification.create!(
             project_id: event.project_id,
@@ -26,8 +29,15 @@ module SupplyChainRisk
             severity: event.severity,
             title: event.title.truncate(300),
             body: event.description,
-            payload: { source: event.source, countryCode: event.country_code,
-                       eventType: event.event_type }
+            payload: {
+              source: event.source,
+              countryCode: event.country_code,
+              eventType: event.event_type,
+              # Deep-link target: the SPA opens the material card with the
+              # supply-chain-risk section expanded.
+              materialId: event.material_id,
+              riskEventId: event.id
+            }.compact
           )
         rescue StandardError => e
           Rails.logger.warn("[supply-chain-risk] notification for event #{event.id} failed: #{e.message}")
@@ -35,10 +45,11 @@ module SupplyChainRisk
         end
 
         # A material whose aggregate turned 🔴 (or stayed 🔴 with a new score).
-        def for_material!(material, previous_level: nil)
-          return unless material.risk_level == 'high'
-          return if previous_level == 'high' &&
-                    material.risk_score_previously_was == material.risk_score
+        # @return [RiskNotification, nil]
+        def for_material!(material, previous_level: nil, previous_score: nil,
+                          policy: Domain::NotificationPolicy)
+          return nil unless policy.notify_for_material?(material, previous_level: previous_level,
+                                                                  previous_score: previous_score)
 
           RiskNotification.create!(
             project_id: material.project_id,
@@ -47,7 +58,8 @@ module SupplyChainRisk
             severity: 'critical',
             title: "#{material.name} ist jetzt kritisch (Score #{material.risk_score})",
             body: 'Lieferrisiko hoch — Alternativlieferant prüfen und Kalkulation absichern.',
-            payload: { riskScore: material.risk_score, riskLevel: material.risk_level }
+            payload: { riskScore: material.risk_score, riskLevel: material.risk_level,
+                       materialId: material.id }
           )
         rescue StandardError => e
           Rails.logger.warn("[supply-chain-risk] notification for material #{material.id} failed: #{e.message}")

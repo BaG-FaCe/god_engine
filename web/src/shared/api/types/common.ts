@@ -51,6 +51,23 @@ export interface Paginated<T> {
 /** Export formats supported by `GET .../export?format=`. */
 export type ExportFormat = 'json' | 'csv' | 'xlsx' | 'pdf';
 
+/** Notification lifecycle status (mirrors RiskNotification). */
+export type NotificationStatus = 'unread' | 'read' | 'acknowledged' | 'dismissed';
+
+/** Minimal notification view used by the in-app notification bell and dropdown. */
+export interface RiskNotificationSummary {
+  id: UUID;
+  projectId: UUID | null;
+  materialId: UUID | null;
+  kind: 'risk_event' | 'critical_material';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  readAt: Timestamp | null;
+  acknowledgedAt: Timestamp | null;
+  dismissedAt: Timestamp | null;
+  createdAt: Timestamp;
+}
+
 /** JWT login request / response. */
 export interface LoginRequest {
   email: string;

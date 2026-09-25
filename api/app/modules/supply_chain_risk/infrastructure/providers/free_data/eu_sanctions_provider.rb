@@ -60,7 +60,7 @@ module SupplyChainRisk
               entry = build_entry(row)
               next if entry.nil?
 
-              SanctionsEntry.upsert(entry, unique_by: %i[source entity_name])
+              SanctionsEntry.sync!(entry)
               imported += 1
             end
             context.log(:info, 'Sanktionsliste synchronisiert', entries: imported)

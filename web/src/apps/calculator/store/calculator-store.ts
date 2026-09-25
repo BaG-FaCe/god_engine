@@ -12,9 +12,12 @@ export interface CalculatorState {
   projectId: string | null;
   scenarioId: string | null;
   tab: CalculatorTabKey;
+  /** Deep-link target set by the notification bell (which material card to open). */
+  focusMaterialId: string | null;
   selectProject: (projectId: string | null) => void;
   selectScenario: (scenarioId: string | null) => void;
   setTab: (tab: CalculatorTabKey) => void;
+  focusMaterial: (materialId: string | null) => void;
 }
 
 export type CalculatorTabKey = 'materials' | 'monthly' | 'fixed' | 'pricing' | 'dashboard';
@@ -33,9 +36,11 @@ export const useCalculatorStore = create<CalculatorState>()(
       projectId: null,
       scenarioId: null,
       tab: 'materials',
+      focusMaterialId: null,
       selectProject: (projectId) => set({ projectId }),
       selectScenario: (scenarioId) => set({ scenarioId }),
       setTab: (tab) => set({ tab }),
+      focusMaterial: (focusMaterialId) => set({ focusMaterialId }),
     }),
     { name: 'god-engine.calculator' },
   ),

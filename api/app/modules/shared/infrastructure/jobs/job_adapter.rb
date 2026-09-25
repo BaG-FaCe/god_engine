@@ -52,6 +52,10 @@ module Shared
           end
 
           def install!
+            # The test environment pins the `:test` adapter (deterministic
+            # `have_enqueued_job` assertions); never override it here.
+            return :test if Rails.env.test?
+
             adapter = resolve
             ActiveJob::Base.queue_adapter = adapter
             adapter

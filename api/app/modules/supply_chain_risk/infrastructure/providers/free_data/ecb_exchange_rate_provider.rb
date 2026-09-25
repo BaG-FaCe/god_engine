@@ -18,6 +18,19 @@ module SupplyChainRisk
 
           NON_EURO = %w[USD GBP CHF PLN CZK HUF SEK NOK DKK TRY CNY JPY KRW INR BRL MXN ZAR].freeze
 
+          # ISO-3166 country -> the currency whose ECB reference rate carries the
+          # financial-risk signal for that sourcing region. `origin_country` is a
+          # country code on the subject, so the adapter must translate it (the old
+          # implementation only recognised raw currency codes and therefore
+          # answered nil for every real material).
+          CURRENCY_BY_COUNTRY = {
+            'US' => 'USD', 'GB' => 'GBP', 'CH' => 'CHF', 'PL' => 'PLN',
+            'CZ' => 'CZK', 'HU' => 'HUF', 'SE' => 'SEK', 'NO' => 'NOK',
+            'DK' => 'DKK', 'TR' => 'TRY', 'CN' => 'CNY', 'JP' => 'JPY',
+            'KR' => 'KRW', 'IN' => 'INR', 'BR' => 'BRL', 'MX' => 'MXN',
+            'ZA' => 'ZAR'
+          }.freeze
+
           class << self
             def descriptor
               @descriptor ||= Infrastructure::ProviderCatalogue.find!('ecb_fx')
@@ -52,9 +65,10 @@ module SupplyChainRisk
           private
 
           def currency_for(country_code)
-            return 'USD' if country_code.to_s.upcase == 'US'
+            code = country_code.to_s.upcase
+            return code if NON_EURO.include?(code)
 
-            NON_EURO.include?(country_code.to_s.upcase) ? country_code.to_s.upcase : nil
+            CURRENCY_BY_COUNTRY[code]
           end
 
           def change_pct(currency)

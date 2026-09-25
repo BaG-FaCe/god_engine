@@ -28,6 +28,21 @@ class SanctionsEntry < ApplicationRecord
     ooo oao pao jsc ojsc cjsc
   ].freeze
 
+  # Idempotent bulk import used by the list sync providers.
+  #
+  # `upsert` needs an explicit `id` because the primary key is a UUID string
+  # without a database default. `update_only` keeps the stable key
+  # (`source`/`entity_name`) and the row's own UUID untouched on conflict - only
+  # the list content is refreshed.
+  def self.sync!(attributes)
+    upsert(
+      attributes.merge(id: SecureRandom.uuid),
+      unique_by: %i[source entity_name],
+      update_only: %i[list_name normalised_name entity_type country_code program
+                      listed_on aliases identifiers updated_at]
+    )
+  end
+
   def self.normalise(name)
     value = name.to_s.unicode_normalize(:nfkd).gsub(/[^\p{Alnum}\s]/, ' ').downcase
     tokens = value.split(/\s+/).reject(&:empty?).reject { |token| LEGAL_SUFFIXES.include?(token) }

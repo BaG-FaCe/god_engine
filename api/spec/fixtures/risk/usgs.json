@@ -1,0 +1,39 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1758600000000,
+    "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson",
+    "title": "USGS Magnitude 4.5+ Earthquakes, Past Week (fixture)",
+    "status": 200,
+    "api": "1.14.1",
+    "count": 2
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "us7000fixture",
+      "properties": {
+        "mag": 5.4,
+        "place": "112 km SE of Shanghai, China",
+        "time": 1758500000000,
+        "updated": 1758500600000,
+        "type": "earthquake",
+        "title": "M 5.4 - 112 km SE of Shanghai, China"
+      },
+      "geometry": { "type": "Point", "coordinates": [121.9, 30.8, 14.2] }
+    },
+    {
+      "type": "Feature",
+      "id": "us7000fixture2",
+      "properties": {
+        "mag": 6.2,
+        "place": "210 km NE of Tokyo, Japan",
+        "time": 1758400000000,
+        "updated": 1758400600000,
+        "type": "earthquake",
+        "title": "M 6.2 - 210 km NE of Tokyo, Japan"
+      },
+      "geometry": { "type": "Point", "coordinates": [141.2, 36.1, 32.5] }
+    }
+  ]
+}

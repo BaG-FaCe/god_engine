@@ -1,0 +1,10 @@
+{
+  "hsCode": "84818099",
+  "origin": "CN",
+  "destination": "DE",
+  "dutyRate": 0.145,
+  "measures": [
+    { "type": "anti_dumping", "description": "Anti-dumping duty (fixture)" }
+  ],
+  "currency": "EUR"
+}

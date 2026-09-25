@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "id": "p44-event-1",
+      "type": "port_congestion",
+      "severity": "high",
+      "title": "Hafenstau Shanghai (Fixture)",
+      "description": "Aufnahmefixture fuer den Paid-Adapter-Ereignispfad.",
+      "country": "CN",
+      "occurredAt": "2026-09-20T08:00:00Z"
+    }
+  ]
+}

@@ -123,6 +123,8 @@ module SupplyChainRisk
                 },
                 provider_key: key
               )
+              return [] if body.blank?
+
               Array(body['features'])
             end
           end
