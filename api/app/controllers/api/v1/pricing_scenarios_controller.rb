@@ -53,7 +53,7 @@ module Api
           includes_tax: @scenario.target_price_includes_tax,
           units_per_month: @scenario.units_per_month, batch_size: @scenario.batch_size
         )
-        @scenario.update!(result_snapshot: result.to_h)
+        @scenario.store_result!(result.to_h)
         render json: result.to_h
       end
 

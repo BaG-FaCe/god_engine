@@ -13,6 +13,23 @@ gem 'rails', '~> 8.0'
 gem 'sqlite3', '~> 2.6'
 gem 'puma', '>= 6.4'
 
+# --- SQL Server support (primary SQL database backend) ------------------------
+# The platform persists its data in four logical databases (productdata, users,
+# events, logs) on a SQL backend. Microsoft SQL Server is the production target,
+# configured through the first-run setup screen (see app/modules/database_setup
+# and config/initializers/sqlserver.rb). The adapter needs FreeTDS, which ships
+# as a precompiled binary with `tiny_tds` on all major platforms.
+gem 'activerecord-sqlserver-adapter', '~> 8.1'
+gem 'tiny_tds', '~> 3.4'
+
+# --- MariaDB / MySQL support (development & test SQL server) -------------------
+# Optional second SQL backend used for development verification against the
+# supplied MariaDB test server (adapter `mariadb` in the setup screen, or
+# SQL_ADAPTER=mariadb). Loaded lazily by DatabaseSetup::Client, so SQL Server
+# and SQLite deployments never require it at runtime.
+gem 'mysql2', '~> 0.5', require: false
+
+
 # Rails 8 database backed infrastructure (replaces Redis + Sidekiq)
 gem 'solid_cache', '~> 1.0'
 gem 'solid_queue', '~> 1.0'

@@ -4,7 +4,7 @@
 #   * created by `NotifyRiskAlert` (never deleted)
 #   * acknowledged by the current user (marker "gesehen", bleibt in Historie)
 #   * dismissed by the current user (verworfen, aber nicht gelöscht, damit Audit-Historie erhalten bleibt)
-class RiskNotification < ApplicationRecord
+class RiskNotification < EventsRecord
   KINDS = %w[risk_event critical_material].freeze
   SEVERITIES = %w[low medium high critical].freeze
 
@@ -33,6 +33,18 @@ class RiskNotification < ApplicationRecord
     return 'read' if read?
 
     'unread'
+  end
+
+  # Reconstructs the notification payload (formerly a JSON column) from the
+  # typed snapshot columns, so the REST contract is unchanged. String keys keep
+  # it identical to the old JSON-column deserialisation.
+  def payload
+    if kind == 'critical_material'
+      { 'riskScore' => risk_score, 'riskLevel' => risk_level, 'materialId' => material_id }.compact
+    else
+      { 'source' => source, 'countryCode' => country_code, 'eventType' => event_type,
+        'materialId' => material_id, 'riskEventId' => risk_event_id }.compact
+    end
   end
 
   def read?

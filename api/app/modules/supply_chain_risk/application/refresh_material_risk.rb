@@ -55,7 +55,7 @@ module SupplyChainRisk
           draft = provider.assess(subject)
           return nil if draft.nil?
 
-          RiskAssessment.create!(draft.to_assessment_attributes(material_id: material.id))
+          RiskAssessment.create_from_draft!(draft, material_id: material.id)
         rescue StandardError => e
           Rails.logger.warn("[supply-chain-risk] #{descriptor.key} failed for #{material.id}: #{e.message}")
           nil

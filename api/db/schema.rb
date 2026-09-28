@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_01_000009) do
   create_table "alternative_suppliers", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "country"
     t.datetime "created_at", null: false
@@ -26,11 +26,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["material_id"], name: "index_alternative_suppliers_on_material_id"
   end
 
+  create_table "audit_log_changes", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "attribute_name", null: false
+    t.string "audit_log_id", null: false
+    t.datetime "created_at", null: false
+    t.text "new_value"
+    t.text "old_value"
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["audit_log_id"], name: "index_audit_log_changes_on_audit_log_id"
+  end
+
+  create_table "audit_log_metadata", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "audit_log_id", null: false
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.index ["audit_log_id"], name: "index_audit_log_metadata_on_audit_log_id"
+  end
+
   create_table "audit_logs", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "action", null: false
     t.string "auditable_id"
     t.string "auditable_type"
-    t.json "changeset"
     t.datetime "created_at", null: false
     t.string "ip"
     t.datetime "occurred_at", null: false
@@ -46,12 +66,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
+  create_table "cost_template_items", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "allocation_basis", default: "per_unit", null: false
+    t.integer "amount_cents", default: 0, null: false
+    t.string "category", default: "other", null: false
+    t.string "cost_template_id", null: false
+    t.datetime "created_at", null: false
+    t.string "employee"
+    t.integer "hourly_rate_cents"
+    t.decimal "hours", precision: 12, scale: 2
+    t.boolean "is_recurring", default: true, null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "position", default: 0, null: false
+    t.string "role"
+    t.datetime "updated_at", null: false
+    t.index ["cost_template_id", "position"], name: "index_cost_template_items_on_cost_template_id_and_position"
+    t.index ["cost_template_id"], name: "index_cost_template_items_on_cost_template_id"
+  end
+
   create_table "cost_templates", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "created_by_id"
     t.text "description"
     t.boolean "is_global", default: false, null: false
-    t.json "items"
     t.string "kind", default: "mixed", null: false
     t.string "name", null: false
     t.string "project_id"
@@ -161,6 +199,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["supplier_id"], name: "index_materials_on_supplier_id"
   end
 
+  create_table "migration_runs", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error_class"
+    t.text "error_message"
+    t.datetime "finished_at"
+    t.integer "rows_imported", default: 0, null: false
+    t.string "run_key", null: false
+    t.string "source_adapter"
+    t.datetime "started_at", null: false
+    t.string "status", default: "running", null: false
+    t.integer "tables_imported", default: 0, null: false
+    t.string "target_adapter"
+    t.string "target_host"
+    t.datetime "updated_at", null: false
+    t.index ["run_key"], name: "index_migration_runs_on_run_key"
+    t.index ["started_at"], name: "index_migration_runs_on_started_at"
+    t.index ["status"], name: "index_migration_runs_on_status"
+  end
+
   create_table "monthly_costs", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.integer "benchmark_amount_cents"
@@ -194,6 +251,53 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["project_id", "key"], name: "index_overhead_rules_on_project_id_and_key", unique: true
   end
 
+  create_table "pricing_scenario_results", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.decimal "break_even_coverage_ratio_pct", precision: 10, scale: 6
+    t.integer "break_even_current_volume"
+    t.boolean "break_even_feasible"
+    t.text "break_even_reason"
+    t.integer "break_even_revenue_net_cents"
+    t.integer "break_even_units_per_month"
+    t.integer "calculated_gross_cents"
+    t.integer "calculated_net_cents"
+    t.datetime "created_at", null: false
+    t.integer "fixed_cost_per_month_cents"
+    t.integer "fixed_cost_per_unit_at_volume_cents"
+    t.decimal "monthly_profit_margin_pct", precision: 10, scale: 6
+    t.integer "monthly_profit_net_cents"
+    t.integer "monthly_profit_units_per_month"
+    t.string "pricing_scenario_id", null: false
+    t.integer "profit_contribution_margin_per_unit_cents"
+    t.decimal "profit_contribution_margin_ratio_pct", precision: 10, scale: 6
+    t.integer "profit_full_cost_per_unit_cents"
+    t.decimal "profit_margin_pct", precision: 10, scale: 6
+    t.decimal "profit_markup_pct", precision: 10, scale: 6
+    t.integer "profit_per_unit_gross_cents"
+    t.integer "profit_per_unit_net_cents"
+    t.integer "profit_variable_cost_per_unit_cents"
+    t.integer "revenue_batch_gross_cents"
+    t.integer "revenue_batch_net_cents"
+    t.integer "revenue_monthly_gross_cents"
+    t.integer "revenue_monthly_net_cents"
+    t.integer "target_gross_cents"
+    t.boolean "target_includes_tax"
+    t.integer "target_net_cents"
+    t.integer "target_price_cents"
+    t.datetime "updated_at", null: false
+    t.integer "variable_cost_per_unit_cents"
+    t.decimal "variable_cost_share_of_price_pct", precision: 10, scale: 6
+    t.index ["pricing_scenario_id"], name: "index_pricing_scenario_results_on_pricing_scenario_id", unique: true
+  end
+
+  create_table "pricing_scenario_warnings", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "message", null: false
+    t.integer "position", default: 0, null: false
+    t.string "pricing_scenario_result_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pricing_scenario_result_id"], name: "index_pricing_scenario_warnings_on_pricing_scenario_result_id"
+  end
+
   create_table "pricing_scenarios", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.integer "batch_size", default: 0, null: false
     t.datetime "created_at", null: false
@@ -201,7 +305,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.string "name", null: false
     t.text "notes"
     t.string "project_id", null: false
-    t.json "result_snapshot"
     t.integer "target_price_cents"
     t.boolean "target_price_includes_tax", default: true, null: false
     t.integer "units_per_month", default: 0, null: false
@@ -234,11 +337,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["status"], name: "index_projects_on_status"
   end
 
+  create_table "risk_assessment_data_sources", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "risk_assessment_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["risk_assessment_id"], name: "index_risk_assessment_data_sources_on_risk_assessment_id"
+  end
+
+  create_table "risk_assessment_dimensions", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "dimension_key", null: false
+    t.integer "position", default: 0, null: false
+    t.string "risk_assessment_id", null: false
+    t.integer "score", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["risk_assessment_id", "dimension_key"], name: "idx_on_risk_assessment_id_dimension_key_9e12f75196", unique: true
+  end
+
   create_table "risk_assessments", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.decimal "confidence", precision: 5, scale: 4
     t.datetime "created_at", null: false
-    t.json "data_sources"
-    t.json "dimensions"
     t.datetime "expires_at"
     t.datetime "fetched_at", null: false
     t.integer "lead_time_variance_days"
@@ -247,7 +367,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.string "provider_key", null: false
     t.string "provider_name", null: false
     t.string "provider_tier", default: "free", null: false
-    t.json "raw_payload"
+    t.text "raw_payload"
     t.text "reason"
     t.string "risk_level", default: "low", null: false
     t.integer "risk_score", default: 0, null: false
@@ -259,6 +379,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["risk_level"], name: "index_risk_assessments_on_risk_level"
   end
 
+  create_table "risk_event_metadata", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.integer "position", default: 0, null: false
+    t.string "risk_event_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.index ["risk_event_id"], name: "index_risk_event_metadata_on_risk_event_id"
+  end
+
   create_table "risk_events", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "acknowledged_at"
     t.string "acknowledged_by_id"
@@ -267,7 +397,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.text "description"
     t.string "event_type", default: "manual", null: false
     t.string "material_id"
-    t.json "metadata"
     t.datetime "occurred_at", null: false
     t.string "project_id"
     t.string "severity", default: "medium", null: false
@@ -287,17 +416,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.datetime "acknowledged_at"
     t.string "acknowledged_by_id"
     t.text "body"
+    t.string "country_code"
     t.datetime "created_at", null: false
     t.datetime "dismissed_at"
     t.string "dismissed_by_id"
+    t.string "event_type"
     t.string "kind", default: "risk_event", null: false
     t.string "material_id"
-    t.json "payload"
     t.string "project_id"
     t.datetime "read_at"
     t.string "read_by_id"
     t.string "risk_event_id"
+    t.string "risk_level"
+    t.integer "risk_score"
     t.string "severity", default: "medium", null: false
+    t.string "source"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["acknowledged_at"], name: "index_risk_notifications_on_acknowledged_at"
@@ -309,7 +442,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
 
   create_table "risk_provider_configs", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.text "api_key"
-    t.json "config"
+    t.text "config"
     t.integer "consecutive_failures", default: 0, null: false
     t.datetime "created_at", null: false
     t.boolean "enabled", default: true, null: false
@@ -369,12 +502,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
   end
 
   create_table "sanctions_entries", id: { type: :string, limit: 36 }, force: :cascade do |t|
-    t.json "aliases"
     t.string "country_code"
     t.datetime "created_at", null: false
     t.string "entity_name", null: false
     t.string "entity_type", default: "entity", null: false
-    t.json "identifiers"
     t.string "list_name", null: false
     t.date "listed_on"
     t.string "normalised_name", null: false
@@ -385,6 +516,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.index ["normalised_name"], name: "index_sanctions_entries_on_normalised_name"
     t.index ["source", "entity_name"], name: "index_sanctions_entries_on_source_and_entity_name", unique: true
     t.index ["source"], name: "index_sanctions_entries_on_source"
+  end
+
+  create_table "sanctions_entry_aliases", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "sanctions_entry_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sanctions_entry_id"], name: "index_sanctions_entry_aliases_on_sanctions_entry_id"
+  end
+
+  create_table "sanctions_entry_identifiers", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "identifier_type", null: false
+    t.integer "position", default: 0, null: false
+    t.string "sanctions_entry_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "value"
+    t.index ["sanctions_entry_id"], name: "index_sanctions_entry_identifiers_on_sanctions_entry_id"
   end
 
   create_table "suppliers", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -400,7 +550,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
     t.string "project_id", null: false
     t.integer "rating"
     t.datetime "sanctions_checked_at"
-    t.json "sanctions_details"
+    t.text "sanctions_details"
     t.string "sanctions_status", default: "unknown", null: false
     t.datetime "updated_at", null: false
     t.string "website"
@@ -426,6 +576,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
   end
 
   add_foreign_key "alternative_suppliers", "materials"
+  add_foreign_key "audit_log_changes", "audit_logs"
+  add_foreign_key "audit_log_metadata", "audit_logs"
+  add_foreign_key "cost_template_items", "cost_templates"
   add_foreign_key "cost_templates", "projects"
   add_foreign_key "fixed_costs", "projects"
   add_foreign_key "labor_costs", "projects"
@@ -435,13 +588,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000007) do
   add_foreign_key "materials", "suppliers"
   add_foreign_key "monthly_costs", "projects"
   add_foreign_key "overhead_rules", "projects"
+  add_foreign_key "pricing_scenario_results", "pricing_scenarios"
+  add_foreign_key "pricing_scenario_warnings", "pricing_scenario_results"
   add_foreign_key "pricing_scenarios", "projects"
+  add_foreign_key "risk_assessment_data_sources", "risk_assessments"
+  add_foreign_key "risk_assessment_dimensions", "risk_assessments"
   add_foreign_key "risk_assessments", "materials"
+  add_foreign_key "risk_event_metadata", "risk_events"
   add_foreign_key "risk_events", "materials"
   add_foreign_key "risk_events", "projects"
   add_foreign_key "risk_notifications", "materials"
   add_foreign_key "risk_notifications", "projects"
   add_foreign_key "risk_score_snapshots", "materials"
   add_foreign_key "sales_forecasts", "projects"
+  add_foreign_key "sanctions_entry_aliases", "sanctions_entries"
+  add_foreign_key "sanctions_entry_identifiers", "sanctions_entries"
   add_foreign_key "suppliers", "projects"
 end

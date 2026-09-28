@@ -47,10 +47,10 @@ RSpec.describe 'Risikoscoring (Domain)' do
   end
 
   describe RiskAssessment, '#dimension_scores' do
-    it 'normalises free-form dimension hashes for the material card' do
-      assessment = build(:risk_assessment, dimensions: { 'logistics' => '42', 'weather' => -1 })
+    it 'normalises dimension rows for the material card' do
+      assessment = create(:risk_assessment, dimensions: { 'logistics' => 42, 'operational' => 30 })
       expect(assessment.dimension_scores['logistics']).to eq(42)
-      expect(assessment.dimension_scores['weather']).to eq(0)
+      expect(assessment.dimension_scores['operational']).to eq(30)
       expect(assessment.dimension_scores['financial']).to be_nil
     end
   end

@@ -7,9 +7,9 @@
 #   * the dashboard needs a stable "unread" counter even after the user changes
 #     or deletes master data,
 #   * acknowledging is per user action, not per data row.
-class CreateRiskNotifications < ActiveRecord::Migration[8.0]
+class CreateRiskNotifications < DatabaseSetup::PlatformMigration
   def change
-    create_table :risk_notifications, id: :string, limit: 36 do |t|
+    routed_create_table :risk_notifications, id: :string, limit: 36 do |t|
       t.string :project_id
       t.string :material_id
       t.string :risk_event_id
@@ -22,10 +22,13 @@ class CreateRiskNotifications < ActiveRecord::Migration[8.0]
       t.string :read_by_id
       t.timestamps
     end
-    add_index :risk_notifications, %i[project_id created_at]
-    add_index :risk_notifications, :read_at
-    add_index :risk_notifications, :severity
-    add_foreign_key :risk_notifications, :projects, column: :project_id
-    add_foreign_key :risk_notifications, :materials, column: :material_id
+    routed_add_index :risk_notifications, %i[project_id created_at]
+    routed_add_index :risk_notifications, :read_at
+    routed_add_index :risk_notifications, :severity
+    # Notifications live in the `events` database; the project/material
+    # references are logical (application-enforced) rather than database keys.
+    routed_add_foreign_key :risk_notifications, :projects, column: :project_id
+    routed_add_foreign_key :risk_notifications, :materials, column: :material_id
   end
 end
+

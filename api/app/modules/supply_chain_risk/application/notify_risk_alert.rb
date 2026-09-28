@@ -29,15 +29,9 @@ module SupplyChainRisk
             severity: event.severity,
             title: event.title.truncate(300),
             body: event.description,
-            payload: {
-              source: event.source,
-              countryCode: event.country_code,
-              eventType: event.event_type,
-              # Deep-link target: the SPA opens the material card with the
-              # supply-chain-risk section expanded.
-              materialId: event.material_id,
-              riskEventId: event.id
-            }.compact
+            source: event.source,
+            country_code: event.country_code,
+            event_type: event.event_type
           )
         rescue StandardError => e
           Rails.logger.warn("[supply-chain-risk] notification for event #{event.id} failed: #{e.message}")
@@ -58,8 +52,8 @@ module SupplyChainRisk
             severity: 'critical',
             title: "#{material.name} ist jetzt kritisch (Score #{material.risk_score})",
             body: 'Lieferrisiko hoch — Alternativlieferant prüfen und Kalkulation absichern.',
-            payload: { riskScore: material.risk_score, riskLevel: material.risk_level,
-                       materialId: material.id }
+            risk_score: material.risk_score,
+            risk_level: material.risk_level
           )
         rescue StandardError => e
           Rails.logger.warn("[supply-chain-risk] notification for material #{material.id} failed: #{e.message}")

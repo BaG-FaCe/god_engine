@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       post 'auth/login', to: 'auth#login'
       get 'auth/me', to: 'auth#me'
 
+      # --- first-run SQL Server setup -------------------------------------
+      get 'system/setup/status', to: 'system_setup#status'
+      post 'system/setup/test', to: 'system_setup#test'
+      post 'system/setup/complete', to: 'system_setup#complete'
+
       # --- projects ------------------------------------------------------
       resources :projects do
         member do

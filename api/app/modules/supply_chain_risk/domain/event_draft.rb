@@ -46,11 +46,11 @@ module SupplyChainRisk
           severity: severity,
           description: description,
           country_code: country_code,
-          metadata: metadata,
           material_id: material_id,
           project_id: project_id
         )
         event.save! if event.new_record? || event.changed?
+        event.replace_metadata!(metadata) if metadata.present?
 
         # In-app notification for every *new* early-warning signal
         # (spec § Lieferrisiko-Management). Re-polls of the same feed update

@@ -7,7 +7,7 @@
 #
 # The `(source, source_event_id)` unique index makes ingestion idempotent, which
 # matters because the open data feeds are polled repeatedly and often overlap.
-class RiskEvent < ApplicationRecord
+class RiskEvent < EventsRecord
   TYPES = %w[weather disaster sanction port_congestion price_spike customs supplier manual].freeze
   SEVERITIES = %w[low medium high critical].freeze
 
@@ -19,6 +19,9 @@ class RiskEvent < ApplicationRecord
   belongs_to :material, optional: true, inverse_of: :risk_events
   belongs_to :project, optional: true
   belongs_to :acknowledged_by, class_name: 'User', optional: true
+
+  has_many :risk_event_metadata, -> { order(:position, :key) },
+            dependent: :destroy, inverse_of: :risk_event
 
   validates :title, presence: true, length: { maximum: 300 }
   validates :event_type, inclusion: { in: TYPES }
@@ -35,6 +38,23 @@ class RiskEvent < ApplicationRecord
 
   def severity_weight
     SEVERITY_WEIGHTS.fetch(severity, 5)
+  end
+
+  # Reconstructs the free-form metadata hash (formerly a JSON column).
+  def metadata
+    risk_event_metadata.each_with_object({}) { |entry, hash| hash[entry.key] = entry.parsed_value }
+  end
+
+  # Replaces the metadata entries from a free-form hash (values JSON-encoded).
+  def replace_metadata!(hash)
+    return if hash.blank?
+
+    transaction do
+      risk_event_metadata.destroy_all
+      hash.each_with_index do |(key, value), index|
+        risk_event_metadata.create!(key: key.to_s, value: value.to_json, position: index)
+      end
+    end
   end
 
   def acknowledge!(user)

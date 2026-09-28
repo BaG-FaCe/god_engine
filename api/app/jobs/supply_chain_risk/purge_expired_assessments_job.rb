@@ -4,7 +4,9 @@ module SupplyChainRisk
     queue_as :maintenance
 
     def perform
-      purged = RiskAssessment.expired.delete_all
+      # `destroy_all` (not `delete_all`) so the dimension/data-source child
+      # rows are removed via their `dependent: :destroy` associations.
+      purged = RiskAssessment.expired.destroy_all
       Material.find_each do |material|
         next if material.risk_score.nil?
 
@@ -17,7 +19,7 @@ module SupplyChainRisk
           update_only: %i[risk_score risk_level event_count updated_at]
         )
       end
-      purged
+      purged.size
     end
   end
 end

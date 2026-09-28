@@ -1,6 +1,9 @@
 module Api
   module V1
     class HealthController < ApplicationController
+      # Health must answer even when the SQL backend is not configured yet.
+      skip_before_action :ensure_persistence_ready!
+
       # GET /api/v1/health — never throttled (see rack_attack.rb).
       def show
         db_ok = begin
@@ -13,7 +16,8 @@ module Api
         render json: {
           status: db_ok ? 'ok' : 'degraded',
           time: Time.current.iso8601,
-          database: db_ok ? 'ok' : 'error',
+          database: DatabaseSetup::Runtime.adapter_name,
+          databaseConnection: db_ok ? 'ok' : 'error',
           jobs: { adapter: caps.adapter.to_s, durable: caps.durable, scheduler: caps.scheduler },
           cache: { store: 'solid_cache' },
           providers: { total: SupplyChainRisk::Infrastructure::ProviderCatalogue.keys.size }

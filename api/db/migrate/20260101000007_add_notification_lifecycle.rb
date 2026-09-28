@@ -7,14 +7,15 @@
 # so the notification history stays auditable.
 #
 # Nothing is ever deleted: `dismissed_at` only hides a row from the open list.
-class AddNotificationLifecycle < ActiveRecord::Migration[8.0]
+class AddNotificationLifecycle < DatabaseSetup::PlatformMigration
   def change
-    add_column :risk_notifications, :acknowledged_at, :datetime
-    add_column :risk_notifications, :acknowledged_by_id, :string
-    add_column :risk_notifications, :dismissed_at, :datetime
-    add_column :risk_notifications, :dismissed_by_id, :string
+    routed_add_column :risk_notifications, :acknowledged_at, :datetime
+    routed_add_column :risk_notifications, :acknowledged_by_id, :string
+    routed_add_column :risk_notifications, :dismissed_at, :datetime
+    routed_add_column :risk_notifications, :dismissed_by_id, :string
 
-    add_index :risk_notifications, :acknowledged_at
-    add_index :risk_notifications, :dismissed_at
+    routed_add_index :risk_notifications, :acknowledged_at
+    routed_add_index :risk_notifications, :dismissed_at
   end
 end
+

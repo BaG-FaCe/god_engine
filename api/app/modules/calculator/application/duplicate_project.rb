@@ -27,8 +27,20 @@ module Calculator
               end
             end
 
-            %i[monthly_costs labor_costs fixed_costs overhead_rules sales_forecasts pricing_scenarios].each do |assoc|
+            %i[monthly_costs labor_costs fixed_costs overhead_rules sales_forecasts].each do |assoc|
               project.public_send(assoc).find_each { |row| dup_record(row, project_id: copy.id) }
+            end
+
+            # Pricing scenarios carry a 1:1 result + warnings (formerly the
+            # `result_snapshot` JSON column), which must be copied explicitly.
+            project.pricing_scenarios.find_each do |scenario|
+              copy_scenario = dup_record(scenario, project_id: copy.id)
+              next unless scenario.result
+
+              copy_result = dup_record(scenario.result, pricing_scenario_id: copy_scenario.id)
+              scenario.result.warnings.each do |warning|
+                dup_record(warning, pricing_scenario_result_id: copy_result.id)
+              end
             end
 
             copy

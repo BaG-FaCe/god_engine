@@ -5,6 +5,7 @@ module Api
       AUTH_HEADER = /\ABearer\s+(.+)\z/i.freeze
 
       before_action :set_default_format
+      before_action :ensure_persistence_ready!
 
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
       rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable
@@ -24,6 +25,20 @@ module Api
 
       def set_default_format
         request.format = :json
+      end
+
+      # --- persistence gate -------------------------------------------------
+
+      # The application must not serve persistent data while the SQL backend is
+      # unconfigured: the first-run setup screen has to be completed first.
+      # Endpoints that do not touch persistence (setup, health) skip this.
+      def ensure_persistence_ready!
+        return unless DatabaseSetup::Runtime.setup_required?
+
+        render_error(
+          'Der SQL-Backend ist nicht konfiguriert. Bitte zuerst die Ersteinrichtung abschließen.',
+          code: 'sql_server_setup_required', status: :service_unavailable
+        )
       end
 
       # --- auth -----------------------------------------------------------

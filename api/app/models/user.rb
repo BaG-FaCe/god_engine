@@ -1,6 +1,7 @@
-# Platform user. Roles are intentionally coarse - fine grained permissions can be
+# Platform user (stored in the `users` database of a SQL backend).
+# Roles are intentionally coarse - fine grained permissions can be
 # layered on later without touching the domain modules.
-class User < ApplicationRecord
+class User < UsersRecord
   ROLES = %w[admin manager viewer].freeze
 
   has_secure_password

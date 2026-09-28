@@ -1,10 +1,12 @@
 import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { Suspense, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink, Route, Routes, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './shared/components/ErrorBoundary';
 import { LoadingState } from './shared/components/LoadingState';
+import { systemSetupApi } from './shared/api/systemSetup';
 import { MODULES, findModule, type ModuleDescriptor } from './shared/module-registry';
 import { AppShell } from './shell/AppShell';
+import { SetupScreen } from './shell/SetupScreen';
 
 const MODULE_LABELS: Record<string, string> = {
   calculate: '∑',
@@ -112,10 +114,46 @@ function ModuleHost() {
  *
  * Only the routes that exist are registered; module code arrives through the
  * lazy imports in `module-registry.ts`.
+ *
+ * First-run gate: the application persists its data in four SQL databases, so
+ * as long as no SQL backend is configured the setup mask is shown instead of
+ * the application shell (the API refuses persistent requests with 503 until
+ * setup succeeds).
  */
 export default function App() {
+  const [setup, setSetup] = useState<{ loading: boolean; required: boolean }>({
+    loading: true,
+    required: false,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    systemSetupApi
+      .status()
+      .then((status) => {
+        if (!cancelled) setSetup({ loading: false, required: status.setupRequired });
+      })
+      .catch(() => {
+        // If the status cannot be read the shell is shown; the API surfaces the
+        // setup requirement per request instead.
+        if (!cancelled) setSetup({ loading: false, required: false });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (setup.loading) {
+    return <LoadingState label="Anwendung wird gestartet …" />;
+  }
+
+  if (setup.required) {
+    return <SetupScreen onCompleted={() => window.location.reload()} />;
+  }
+
   return (
     <Routes>
+      <Route path="/setup" element={<SetupScreen />} />
       <Route element={<AppShell />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/modules/:moduleId/*" element={<ModuleHost />} />

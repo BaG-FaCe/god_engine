@@ -1,13 +1,17 @@
 # `supply-chain-risk` bounded context.
 #
+# Database placement (see DatabaseSetup::TableRouting):
+#   material_risk_profiles, risk_assessments -> `productdata`
+#   risk_events (+ risk_event_metadata)      -> `events`
+#
 # Every table in this migration belongs to the risk module. The `calculator`
 # context only ever reads material risk through the module's public API or the
 # denormalised `materials.risk_score` column - never through these tables
 # directly (enforced by spec/architecture/module_boundaries_spec.rb).
-class CreateSupplyChainRisk < ActiveRecord::Migration[8.0]
+class CreateSupplyChainRisk < DatabaseSetup::PlatformMigration
   def change
     # --- manually maintained risk master data per material ---------------
-    create_table :material_risk_profiles, id: :string, limit: 36 do |t|
+    routed_create_table :material_risk_profiles, id: :string, limit: 36 do |t|
       t.string :material_id, null: false
       t.string :origin_country
       t.string :hs_code
@@ -31,12 +35,12 @@ class CreateSupplyChainRisk < ActiveRecord::Migration[8.0]
       t.string :manually_assessed_by_id
       t.timestamps
     end
-    add_index :material_risk_profiles, :material_id, unique: true
-    add_index :material_risk_profiles, :origin_country
-    add_foreign_key :material_risk_profiles, :materials, column: :material_id
+    routed_add_index :material_risk_profiles, :material_id, unique: true
+    routed_add_index :material_risk_profiles, :origin_country
+    routed_add_foreign_key :material_risk_profiles, :materials, column: :material_id
 
     # --- provider results -------------------------------------------------
-    create_table :risk_assessments, id: :string, limit: 36 do |t|
+    routed_create_table :risk_assessments, id: :string, limit: 36 do |t|
       t.string :material_id, null: false
       t.string :provider_key, null: false
       t.string :provider_name, null: false
@@ -54,15 +58,15 @@ class CreateSupplyChainRisk < ActiveRecord::Migration[8.0]
       t.decimal :confidence, precision: 5, scale: 4
       t.timestamps
     end
-    add_index :risk_assessments, %i[material_id fetched_at]
-    add_index :risk_assessments, %i[material_id provider_key fetched_at]
-    add_index :risk_assessments, :provider_key
-    add_index :risk_assessments, :risk_level
-    add_index :risk_assessments, :expires_at
-    add_foreign_key :risk_assessments, :materials, column: :material_id
+    routed_add_index :risk_assessments, %i[material_id fetched_at]
+    routed_add_index :risk_assessments, %i[material_id provider_key fetched_at]
+    routed_add_index :risk_assessments, :provider_key
+    routed_add_index :risk_assessments, :risk_level
+    routed_add_index :risk_assessments, :expires_at
+    routed_add_foreign_key :risk_assessments, :materials, column: :material_id
 
-    # --- risk events / early warning feed ---------------------------------
-    create_table :risk_events, id: :string, limit: 36 do |t|
+    # --- risk events / early warning feed (events database) ---------------
+    routed_create_table :risk_events, id: :string, limit: 36 do |t|
       t.string :material_id
       t.string :project_id
       t.string :country_code
@@ -78,13 +82,15 @@ class CreateSupplyChainRisk < ActiveRecord::Migration[8.0]
       t.json :metadata
       t.timestamps
     end
-    add_index :risk_events, %i[source source_event_id], unique: true
-    add_index :risk_events, %i[material_id occurred_at]
-    add_index :risk_events, %i[project_id occurred_at]
-    add_index :risk_events, :severity
-    add_index :risk_events, :event_type
-    add_index :risk_events, :occurred_at
-    add_foreign_key :risk_events, :materials, column: :material_id
-    add_foreign_key :risk_events, :projects, column: :project_id
+    routed_add_index :risk_events, %i[source source_event_id], unique: true
+    routed_add_index :risk_events, %i[material_id occurred_at]
+    routed_add_index :risk_events, %i[project_id occurred_at]
+    routed_add_index :risk_events, :severity
+    routed_add_index :risk_events, :event_type
+    routed_add_index :risk_events, :occurred_at
+    # `risk_events` lives in a separate database, so the references to materials
+    # and projects are logical (application-enforced), not database-level keys.
+    routed_add_foreign_key :risk_events, :materials, column: :material_id
+    routed_add_foreign_key :risk_events, :projects, column: :project_id
   end
 end

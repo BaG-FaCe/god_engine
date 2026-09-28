@@ -53,7 +53,8 @@ module SupplyChainRisk
         dimensions.compact.keys
       end
 
-      # Attributes for `RiskAssessment.create!`.
+      # Attributes for `RiskAssessment.create_from_draft!`. Dimensions and data
+      # sources are persisted as child rows by that method (no longer JSON).
       def to_assessment_attributes(material_id:, fetched_at: Time.current)
         {
           material_id: material_id,
@@ -62,13 +63,11 @@ module SupplyChainRisk
           provider_tier: provider_tier,
           risk_score: risk_score,
           risk_level: risk_level,
-          dimensions: dimensions,
           lead_time_variance_days: lead_time_variance_days,
           reason: reason,
           origin: 'automatic',
           fetched_at: fetched_at,
           expires_at: expires_in && fetched_at + expires_in,
-          data_sources: data_sources,
           raw_payload: raw_payload,
           confidence: confidence
         }

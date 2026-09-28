@@ -21,13 +21,14 @@ module Shared
               project_id: resolve_project_id(project, auditable),
               user_id: user&.id,
               user_name: user&.name,
-              changeset: serialise_changes(changes).merge(metadata || {}).presence,
               ip: request&.remote_ip,
               user_agent: request&.user_agent.to_s.truncate(255),
               occurred_at: Time.current
             )
 
             log.save!
+            write_changes!(log, changes)
+            write_metadata!(log, metadata)
             log
           rescue ActiveRecord::RecordInvalid => e
             # Auditing must never break the business transaction, but the failure
@@ -84,13 +85,36 @@ module Shared
             nil
           end
 
-          # Turns raw `previous_changes` values into JSON-safe scalars.
-          def serialise_changes(changes)
-            return {} if changes.blank?
-
-            changes.to_h.transform_values do |(from, to)|
-              { 'from' => jsonable(from), 'to' => jsonable(to) }
+          # Turns raw `previous_changes` into ordered attribute diffs written to
+          # the `audit_log_changes` child table.
+          def write_changes!(log, changes)
+            serialise_changes(changes).each_with_index do |(attribute, from, to), index|
+              log.audit_log_changes.create!(
+                attribute_name: attribute,
+                old_value: jsonable(from).to_json,
+                new_value: jsonable(to).to_json,
+                position: index
+              )
             end
+          end
+
+          # Writes the free-form metadata entries to `audit_log_metadata`.
+          def write_metadata!(log, metadata)
+            return if metadata.blank?
+
+            metadata.each_with_index do |(key, value), index|
+              log.audit_log_metadata.create!(
+                key: key.to_s,
+                value: jsonable(value).to_json,
+                position: index
+              )
+            end
+          end
+
+          def serialise_changes(changes)
+            return [] if changes.blank?
+
+            changes.to_h.map { |attribute, (from, to)| [attribute, from, to] }
           end
 
           def jsonable(value)

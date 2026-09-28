@@ -8,6 +8,13 @@
 #   storage/<env>.sqlite3        - application data
 #   storage/<env>_cache.sqlite3  - Solid Cache entries
 #   storage/<env>_queue.sqlite3  - Solid Queue jobs
+#
+# OPTIONAL: Microsoft SQL Server backend.
+# The platform can run its primary (application) database on SQL Server instead
+# of SQLite. Set DB_ADAPTER=sqlserver and provide SQL_SERVER / SQL_USER /
+# SQL_PASSWORD (or complete the first-run setup screen). The switch happens in
+# config/initializers/sqlserver.rb via `establish_connection`; Solid Cache and
+# Solid Queue keep their SQLite files so the whole stack stays dependency-light.
 # ---------------------------------------------------------------------------
 default: &default
   adapter: sqlite3

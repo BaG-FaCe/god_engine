@@ -17,15 +17,17 @@ module Api
 
       def create
         require_write!
-        template = CostTemplate.new(template_params)
+        template = CostTemplate.new(template_params.except(:items))
         template.save!
+        template.replace_items!(template_params[:items]) if template_params[:items].present?
         render json: Calculator::Application::Serializers.cost_template(template), status: :created
       end
 
       def update
         require_write!
         template = CostTemplate.find(params[:id])
-        template.update!(template_params)
+        template.update!(template_params.except(:items))
+        template.replace_items!(template_params[:items]) if template_params[:items].present?
         render json: Calculator::Application::Serializers.cost_template(template)
       end
 
@@ -47,8 +49,11 @@ module Api
       private
 
       def template_params
-        params.require(:cost_template).permit(:name, :kind, :description, :is_global,
-                                              :project_id, items: [])
+        params.require(:cost_template).permit(
+          :name, :kind, :description, :is_global, :project_id,
+          items: %i[category name amountCents isRecurring notes employee role hours
+                    hourlyRateCents allocationBasis]
+        )
       end
     end
   end

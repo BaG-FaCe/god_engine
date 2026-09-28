@@ -16,6 +16,13 @@ class RiskAssessment < ApplicationRecord
   MAX_SCORE = 100
 
   belongs_to :material, inverse_of: :risk_assessments
+  has_many :risk_assessment_dimensions, -> { order(:position, :dimension_key) },
+            dependent: :destroy, inverse_of: :risk_assessment
+  has_many :risk_assessment_data_sources, -> { order(:position, :name) },
+            dependent: :destroy, inverse_of: :risk_assessment
+
+  # Opaque external API response capture (special case, documented).
+  serialize :raw_payload, coder: JSON
 
   validates :provider_key, :provider_name, presence: true
   validates :provider_tier, inclusion: { in: PROVIDER_TIERS }
@@ -32,13 +39,35 @@ class RiskAssessment < ApplicationRecord
   scope :for_provider, ->(key) { where(provider_key: key) }
   scope :automatic, -> { where(origin: %w[automatic hybrid]) }
 
-  # Normalises the free-form dimension hash to all known keys.
+  # Persists an `AssessmentDraft` together with its dimension scores and data
+  # source names (formerly stored as JSON on the assessment row itself).
+  def self.create_from_draft!(draft, material_id:, fetched_at: Time.current)
+    transaction do
+      assessment = create!(draft.to_assessment_attributes(material_id: material_id, fetched_at: fetched_at))
+      draft.dimensions.each_with_index do |(key, score), index|
+        next if score.nil?
+
+        assessment.risk_assessment_dimensions.create!(dimension_key: key, score: score, position: index)
+      end
+      Array(draft.data_sources).each_with_index do |name, index|
+        assessment.risk_assessment_data_sources.create!(name: name, position: index)
+      end
+      assessment
+    end
+  end
+
+  # Normalises the dimension rows to all known keys.
   def dimension_scores
-    stored = (dimensions || {}).stringify_keys
+    stored = risk_assessment_dimensions.each_with_object({}) { |dim, hash| hash[dim.dimension_key] = dim.score }
     DIMENSION_KEYS.index_with do |key|
       raw = stored[key]
       raw.nil? ? nil : [[raw.to_f.round, 0].max, MAX_SCORE].min
     end
+  end
+
+  # Names of the data sources that contributed to this assessment.
+  def data_sources
+    risk_assessment_data_sources.map(&:name)
   end
 
   def stale?

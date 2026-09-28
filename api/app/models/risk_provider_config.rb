@@ -8,6 +8,10 @@ class RiskProviderConfig < ApplicationRecord
 
   encrypts :api_key
 
+  # Free-form provider configuration (special case, documented): endpoint/path
+  # overrides per provider, kept as opaque serialised data.
+  serialize :config, coder: JSON
+
   belongs_to :project, optional: true
 
   validates :provider_key, presence: true

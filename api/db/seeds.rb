@@ -100,7 +100,7 @@ project.sales_forecasts.find_or_create_by!(period: '2026-10') { |record| record.
   )
   next if draft.nil?
 
-  assessment = RiskAssessment.create!(draft.to_assessment_attributes(material_id: material.id))
+  assessment = RiskAssessment.create_from_draft!(draft, material_id: material.id)
   material.update_columns(risk_score: assessment.risk_score, risk_level: assessment.risk_level,
                           last_risk_checked_at: assessment.fetched_at, updated_at: Time.current)
 end

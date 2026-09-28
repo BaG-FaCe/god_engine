@@ -12,6 +12,10 @@ class Supplier < ApplicationRecord
   validates :sanctions_status, inclusion: { in: SANCTIONS_STATUSES }
   validate :country_code_format
 
+  # Unstructured screening result (special case, documented). No fixed schema
+  # and no current producer; kept as opaque serialised data.
+  serialize :sanctions_details, coder: JSON
+
   scope :ordered, -> { order(:name) }
   scope :flagged, -> { where(sanctions_status: 'flagged') }
   scope :single_source, -> { where(is_single_source: true) }

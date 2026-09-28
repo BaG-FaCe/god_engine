@@ -1,5 +1,21 @@
 # Versioning / Fortschrittsprotokoll
 
+## 2026-09-28 – Microsoft SQL Server (optionales Backend + Ersteinrichtung)
+- Aufgabe: SQL-Server-Unterstützung, Ersteinrichtungs-Bildschirm, Initialisierung der drei Datenbanken (`app_data` / `log` / `users`), Legacy-Datenmigration, Dokumentation.
+- Änderung (Backend):
+  - **Adapter** (`api/Gemfile`): `activerecord-sqlserver-adapter ~> 8.1` + `tiny_tds ~> 3.4` ergänzt (SQLite bleibt Standard).
+  - **Neues Modul `DatabaseSetup`** (`app/modules/database_setup/`): `Configuration` (Value Object), `ConfigurationStore` (gitignorierte lokale Datei + ENV, Passwort wird nie geloggt), `Connection` (TinyTds-Verbindungstest mit Redaktion), `Provisioner` (legt fehlende DBs nicht-destruktiv an), `SchemaLoader` (führt `db/migrate` aus), `LegacyMigration` (SQLite→SQL Server über die echten Modelle, idempotent), `Seeder` (initialer Eintrag: Admin + Demo über `db/seeds.rb`), `Runtime` (Adapterwahl + `establish_connection`).
+  - **Ersteinrichtungs-API** `SystemSetupController`: `GET /system/setup/status`, `POST /system/setup/test` (read-only), `POST /system/setup/complete` (Provisionierung + Schema + Migration + Speichern); gesperrt bei bereits vorhandener Konfiguration (409).
+  - **Initializer** `config/initializers/sqlserver.rb` (nach `after_initialize`): stellt bei aktivem SQL Server die Primärverbindung um, fällt bei Fehler auf SQLite zurück.
+  - **CLI** `lib/tasks/sqlserver.rake` (`status/test/provision/migrate/setup`).
+  - `.gitignore` um `api/config/sqlserver.local.yml` erweitert; `.env.example` um SQL-Server-Platzhalter ergänzt.
+- Änderung (Frontend): `web/src/shell/SetupScreen.tsx` (Ersteinrichtungs-Formular), `web/src/shared/api/systemSetup.ts`, Route `/setup` in `App.tsx`.
+- Tests: neu `spec/database_setup/*` (5 Dateien) + `spec/requests/system_setup_spec.rb`. Gesamt-Suite **352 Beispiele grün** (RSpec). Frontend: `tsc -b --noEmit`, `vite build`, Vitest **13 Tests grün**.
+- Offene Punkte / bekannte Einschränkungen:
+  - **Kein Live-Test gegen einen SQL Server** möglich: der Entwicklungs-Server war aus der Umgebung nicht erreichbar (Link-Local-Adresse, Port 1433/1443 nicht verbindbar). Verifiziert wurden Unit-/Request-Specs und ein SQLite→SQLite-Migrations-Roundtrip über die echten Modelle; ein echter End-to-End-Lauf gegen einen SQL Server steht noch aus.
+  - Solid Cache / Solid Queue bleiben auf SQLite (nur die primäre Anwendungsdatenbank läuft auf SQL Server).
+- Abweichungen von original_app_structure.md: keine; SQL Server ist ein rein optionales, zusätzliches Backend.
+
 ## 2026-09-25 – Projekte löschen/archivieren (mit Bestätigung)
 - Aufgabe: Ergänzung (UI – „Option Projekte zu löschen/entfernen, nur mit Bestätigung“)
 - Änderung:

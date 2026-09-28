@@ -100,7 +100,7 @@ module Calculator
           {
             id: template.id, projectId: template.project_id, name: template.name,
             kind: template.kind, description: template.description,
-            isGlobal: template.is_global, items: Array(template.items),
+            isGlobal: template.is_global, items: template.items_as_json,
             itemCount: template.item_count, totalCents: template.total_cents,
             createdAt: template.created_at&.iso8601, updatedAt: template.updated_at&.iso8601
           }

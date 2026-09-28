@@ -7,13 +7,25 @@ FactoryBot.define do
     risk_score { 42 }
     risk_level { 'medium' }
     origin { 'automatic' }
-    dimensions { { 'logistics' => 42, 'operational' => 30 } }
     lead_time_variance_days { nil }
     reason { 'Testbewertung' }
-    data_sources { ['Internes Heuristikmodell'] }
     confidence { BigDecimal('0.45') }
     fetched_at { Time.current }
     expires_at { 1.hour.from_now }
+
+    transient do
+      dimensions { { 'logistics' => 42, 'operational' => 30 } }
+      data_sources { ['Internes Heuristikmodell'] }
+    end
+
+    after(:create) do |assessment, evaluator|
+      evaluator.dimensions.each_with_index do |(key, score), index|
+        assessment.risk_assessment_dimensions.create!(dimension_key: key, score: score, position: index)
+      end
+      evaluator.data_sources.each_with_index do |name, index|
+        assessment.risk_assessment_data_sources.create!(name: name, position: index)
+      end
+    end
 
     trait :expired do
       fetched_at { 2.days.ago }
@@ -39,7 +51,14 @@ FactoryBot.define do
     description { 'Testereignis' }
     country_code { 'CN' }
     occurred_at { Time.current }
-    metadata { { alertLevel: 'Orange' } }
+
+    transient do
+      metadata { { alertLevel: 'Orange' } }
+    end
+
+    after(:create) do |event, evaluator|
+      event.replace_metadata!(evaluator.metadata) if evaluator.metadata.present?
+    end
 
     trait :critical do
       severity { 'critical' }
@@ -54,7 +73,7 @@ FactoryBot.define do
     severity { 'critical' }
     sequence(:title) { |n| "Kritische Risikomeldung #{n}" }
     body { 'Lieferrisiko hoch' }
-    payload { { source: 'gdacs' } }
+    source { 'gdacs' }
     read_at { nil }
 
     trait :acknowledged do

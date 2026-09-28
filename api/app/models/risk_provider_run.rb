@@ -3,7 +3,7 @@
 # This is the operational counterpart to the open-data quota documentation: it
 # makes it observable *when* which provider ran, how long it took and how many
 # calls it consumed (deliverable 11 - "Externe API-Anbindung" / Monitoring).
-class RiskProviderRun < ApplicationRecord
+class RiskProviderRun < LogsRecord
   STATUSES = %w[ok partial error skipped].freeze
 
   validates :provider_key, presence: true
