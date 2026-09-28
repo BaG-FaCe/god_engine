@@ -1,13 +1,13 @@
 import {
   Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
-  MenuItem, Paper, Stack, Tab, Tabs, TextField,
+  Menu, MenuItem, Paper, Stack, Tab, Tabs, TextField, Typography,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { LoadingState } from '../../shared/components/LoadingState';
 import { QueryError } from '../../shared/components/QueryError';
 import { formatMoney } from '../../shared/lib/money';
-import type { ProjectUpsert } from '../../shared/api/types';
+import type { Project, ProjectUpsert } from '../../shared/api/types';
 import {
   useDashboard, useProject, useProjectMutations, useProjects,
 } from './api/queries';
@@ -59,14 +59,91 @@ function NewProjectDialog({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
+function ArchiveProjectDialog({
+  project, onClose, onConfirm, pending,
+}: {
+  project: Project | null;
+  onClose: () => void;
+  onConfirm: () => void;
+  pending: boolean;
+}) {
+  return (
+    <Dialog open={Boolean(project)} onClose={onClose}>
+      <DialogTitle>Projekt archivieren</DialogTitle>
+      <DialogContent>
+        <Alert severity="warning">
+          „{project?.name}“ wird archiviert und aus der Projektauswahl entfernt.
+          Alle Daten bleiben erhalten und können später wiederhergestellt werden.
+        </Alert>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Abbrechen</Button>
+        <Button variant="contained" color="warning" disabled={pending} onClick={onConfirm}>
+          Archivieren
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function DeleteProjectDialog({
+  project, onClose, onConfirm, pending,
+}: {
+  project: Project | null;
+  onClose: () => void;
+  onConfirm: () => void;
+  pending: boolean;
+}) {
+  const [confirmation, setConfirmation] = useState('');
+  const matches = project ? confirmation.trim() === project.name : false;
+
+  return (
+    <Dialog open={Boolean(project)} onClose={onClose}>
+      <DialogTitle>Projekt endgültig löschen</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ minWidth: 380 }}>
+          <Alert severity="error">
+            „{project?.name}“ wird samt aller Materialien, Kosten, Szenarien und
+            Risikodaten unwiderruflich gelöscht. Das kann nicht rückgängig gemacht werden.
+          </Alert>
+          <Typography variant="body2">
+            Zum Bestätigen bitte den Projektnamen eingeben:{' '}
+            <strong>{project?.name}</strong>
+          </Typography>
+          <TextField
+            label="Projektname"
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            fullWidth
+            autoFocus
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Abbrechen</Button>
+        <Button variant="contained" color="error" disabled={!matches || pending} onClick={onConfirm}>
+          Endgültig löschen
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function CalculatorPage() {
   const projects = useProjects();
   const store = useCalculatorStore();
+  const projectMutations = useProjectMutations();
 
   const projectList = projects.data?.data ?? [];
-  const activeId = store.projectId && projectList.some((project) => project.id === store.projectId)
+  // Archived projects are soft-removed: they stay in the database but disappear
+  // from the working set (they can be restored via the API / a future view).
+  const visibleProjects = useMemo(
+    () => projectList.filter((project) => project.status !== 'archived'),
+    [projectList],
+  );
+  const activeId = store.projectId && visibleProjects.some((project) => project.id === store.projectId)
     ? store.projectId
-    : (projectList[0]?.id ?? null);
+    : (visibleProjects[0]?.id ?? null);
 
   useEffect(() => {
     if (activeId && activeId !== store.projectId) store.selectProject(activeId);
@@ -74,8 +151,27 @@ export default function CalculatorPage() {
 
   const project = useProject(activeId);
   const dashboard = useDashboard(activeId);
+  const activeProject = visibleProjects.find((entry) => entry.id === activeId) ?? null;
 
   const [newOpen, setNewOpen] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Project | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+
+  const confirmArchive = () => {
+    if (!archiveTarget) return;
+    projectMutations.archive.mutate(archiveTarget.id, { onSuccess: () => setArchiveTarget(null) });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    projectMutations.remove.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        setDeleteTarget(null);
+        if (store.projectId === deleteTarget.id) store.selectProject(null);
+      },
+    });
+  };
 
   const tab = store.tab;
   const tabValue = useMemo(
@@ -86,7 +182,7 @@ export default function CalculatorPage() {
   if (projects.isLoading) return <LoadingState label="Projekte werden geladen …" />;
   if (projects.isError) return <QueryError error={projects.error} />;
 
-  if (projectList.length === 0) {
+  if (visibleProjects.length === 0) {
     return (
       <Stack spacing={2}>
         <Alert severity="info">
@@ -109,10 +205,35 @@ export default function CalculatorPage() {
             value={activeId ?? ''}
             onChange={(event) => store.selectProject(event.target.value)}
           >
-            {projectList.map((entry) => (
+            {visibleProjects.map((entry) => (
               <MenuItem key={entry.id} value={entry.id}>{entry.name}</MenuItem>
             ))}
           </TextField>
+          <Button
+            size="small"
+            color="inherit"
+            disabled={!activeProject}
+            onClick={(event) => setMenuAnchor(event.currentTarget)}
+          >
+            ⋯
+          </Button>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+          >
+            <MenuItem
+              onClick={() => { setArchiveTarget(activeProject); setMenuAnchor(null); }}
+            >
+              Archivieren
+            </MenuItem>
+            <MenuItem
+              sx={{ color: 'error.main' }}
+              onClick={() => { setDeleteTarget(activeProject); setMenuAnchor(null); }}
+            >
+              Löschen …
+            </MenuItem>
+          </Menu>
           {project.data && (
             <Chip label={`MwSt. ${project.data.taxRate}%`} size="small" />
           )}
@@ -146,6 +267,21 @@ export default function CalculatorPage() {
       {activeId && tab === 'dashboard' && <DashboardTab projectId={activeId} />}
 
       <NewProjectDialog open={newOpen} onClose={() => setNewOpen(false)} />
+
+      <ArchiveProjectDialog
+        key={archiveTarget?.id ?? 'archive'}
+        project={archiveTarget}
+        onClose={() => setArchiveTarget(null)}
+        onConfirm={confirmArchive}
+        pending={projectMutations.archive.isPending}
+      />
+      <DeleteProjectDialog
+        key={deleteTarget?.id ?? 'delete'}
+        project={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        pending={projectMutations.remove.isPending}
+      />
     </Stack>
   );
 }

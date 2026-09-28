@@ -130,7 +130,7 @@ module SupplyChainRisk
               body = context.http.post_json(
                 ENDPOINT,
                 payload: {
-                  appname: ENV.fetch('RELIEFWEB_APPNAME', 'god-engine-risk-intelligence'),
+                  appname: appname,
                   profile: 'list',
                   limit: LIMIT,
                   sort: ['date:desc'],
@@ -143,6 +143,14 @@ module SupplyChainRisk
               )
               Array(body && body['data'])
             end
+          end
+
+          # Per-project appname (config JSON) wins over the process environment,
+          # which in turn wins over the neutral fallback string.
+          def appname
+            context.config['appname'].presence ||
+              ENV['RELIEFWEB_APPNAME'].presence ||
+              'god-engine-risk-intelligence'
           end
 
           def country_matches?(fields, primary, code)

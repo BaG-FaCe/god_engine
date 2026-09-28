@@ -1,5 +1,39 @@
 # Versioning / Fortschrittsprotokoll
 
+## 2026-09-25 – Projekte löschen/archivieren (mit Bestätigung)
+- Aufgabe: Ergänzung (UI – „Option Projekte zu löschen/entfernen, nur mit Bestätigung“)
+- Änderung:
+  - **Frontend** (`web/src/apps/calculator/index.tsx`): „⋯“-Menü neben der Projektauswahl mit „Archivieren“ und „Löschen …“.
+    - Löschen: Bestätigungsdialog mit **Eingabe des Projektnamens** (Type-to-confirm) + Hinweis auf unwiderrufliches Löschen; Button erst aktiv, wenn der Name exakt übereinstimmt.
+    - Archivieren: eigener Bestätigungsdialog (Soft-Remove).
+    - Archivierte Projekte werden aus der Auswahl herausgefiltert (`visibleProjects`), bleiben aber in der DB und sind via API wiederherstellbar.
+    - Nach dem Löschen wird die Auswahl zurückgesetzt (`store.selectProject(null)`); die `activeId`-Fallback-Logik wählt automatisch das nächste Projekt.
+  - **Backend**: bereits vorhandene Endpunkte (`DELETE /api/v1/projects/:id`, `POST .../archive`, `.../restore`) unverändert – die Bestätigung ist eine reine UI-Schutzschicht.
+- Betroffene Dateien/Module:
+  - Frontend: `web/src/apps/calculator/index.tsx`.
+  - Backend: keine Codeänderung (nur Tests).
+- Tests:
+  - Backend: neu `spec/requests/projects_spec.rb` (4 Beispiele: Schreibschutz, Hard-Delete kaskadiert Materialien/Lieferanten, Archive, Restore). Gesamt-Suite **329 Beispiele grün**.
+  - Frontend: `tsc -b --noEmit` und `vite build` grün; Vitest **13 Tests grün**.
+- Offene Punkte / bekannte Einschränkungen:
+  - Keine eigene UI-Liste „Archivierte Projekte“ zum Wiederherstellen (Restore aktuell nur via API `POST /projects/:id/restore`). Folgeschritt, falls gewünscht.
+- Abweichungen von original_app_structure.md: keine.
+
+
+## 2026-09-25 – Provider-Konfiguration (URLs + Keys) dokumentiert & durchgereicht
+- Aufgabe: 1 (Ergänzung – „Möglichkeiten URLs/Keys in einer Config zu hinterlegen“)
+- Änderung:
+  - **Bugfix `RefreshMaterialRisk#build_context`**: die pro Projekt gespeicherte `config`-JSON (`baseUrl`, `assessmentPath`, `eventsPath`, `tokenUrl`, `mapping`, `appname`, …) wird jetzt zusammen mit dem verschlüsselten `api_key` an den `ProviderContext` durchgereicht. Vorher wurde nur der Key weitergegeben → Endpoint-/Pfad-Overrides aus `POST /api/v1/risk_providers/:key/configure` wurden ignoriert.
+  - **`ReliefWebProvider#appname`**: jetzt pro Projekt (`config['appname']`) > `RELIEFWEB_APPNAME` > Neutral-Fallback.
+  - **`.env.example`** vollständig überarbeitet: URL-/Endpoint-Env-Vars (`RELIEFWEB_APPNAME`, `EU_TARIC_BASE_URL`, `EU_TARIC_MEASURES_PATH`, `FREIGHTOS_BASE_URL`, `FREIGHTOS_INDEX_PATH`, `RISK_NOTIFICATION_MIN_SEVERITY`) ergänzt und der Per-Projekt-`config`-JSON (mit Beispiel-POST + Präzedenz) dokumentiert.
+- Betroffene Dateien/Module:
+  - `app/modules/supply_chain_risk/application/refresh_material_risk.rb`, `app/modules/supply_chain_risk/infrastructure/providers/free_data/relief_web_provider.rb`, `api/.env.example`.
+- Tests: neu `spec/application/refresh_material_risk_spec.rb` (2 Beispiele: Config wird durchgereicht / ohne Endpoint wird geskippt). Gesamt-Suite **325 Beispiele grün**.
+- Offene Punkte / bekannte Einschränkungen:
+  - `api_secret` (OAuth2-Client-Secret) ist weiterhin über Env (`*_API_SECRET`) zu pflegen, da die `risk_provider_configs`-Tabelle nur `api_key` (verschlüsselt) + `config` (JSON, unverschlüsselt) besitzt. Ein separates verschlüsseltes `api_secret`-Feld wäre ein Folge-Schritt.
+  - Das Event-Polling (`PollDisasterAlertsJob`) liest die Projekt-`config` noch nicht (Events sind global); bei Bedarf dort `PollSchedule` um `config`-Durchreichung erweitern.
+- Abweichungen von original_app_structure.md: keine; nutzt die bestehende `risk_provider_configs`-Tabelle wie vorgesehen.
+
 ## 2026-02-27 - Backend: Notification-Controlling-Pfade vervollstandigt
 - Aufgabe: 2 (Teil)
 - Anderung: 

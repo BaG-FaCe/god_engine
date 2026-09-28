@@ -62,10 +62,18 @@ module SupplyChainRisk
         end
 
         def build_context(descriptor, project)
-          config = RiskProviderConfig.for_project(project).find_by(provider_key: descriptor.key)
+          record = RiskProviderConfig.for_project(project).find_by(provider_key: descriptor.key)
+          # Pass the whole per-project override set through: the encrypted API key
+          # AND the free-form `config` JSON (baseUrl, assessmentPath, eventsPath,
+          # tokenUrl, mapping, appname, ...). Before this fix only the key was
+          # forwarded, so any endpoint/path overrides stored via
+          # `POST /api/v1/risk_providers/:key/configure` were silently ignored.
+          overrides = (record&.config || {}).stringify_keys
+          overrides['api_key'] = record.api_key if record&.api_key_present?
+
           Domain::ProviderContext.new(
             descriptor: descriptor,
-            config: { api_key: config&.api_key },
+            config: overrides,
             project_id: project&.id
           )
         end
