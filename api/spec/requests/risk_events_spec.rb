@@ -6,7 +6,7 @@ RSpec.describe 'RiskEvents API', type: :request do
 
   describe 'GET /api/v1/risk_events' do
     it 'lists events' do
-      get '/api/v1/risk_events'
+      get '/api/v1/risk_events', headers: auth_headers
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['data'].first['title']).to eq('Typhoon')
     end

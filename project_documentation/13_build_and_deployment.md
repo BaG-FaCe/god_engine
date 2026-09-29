@@ -54,7 +54,7 @@ npm run preview                   # Vorschau des Production-Builds
   `QUEUE_DATABASE_PATH` aus ENV.
 - `cache.yml`/`queue.yml` — Solid Cache/Queue-Produktionswerte (Threads/Prozesse via
   `QUEUE_THREADS`, `JOB_CONCURRENCY`).
-- Pflicht-Secrets in Produktion: `SECRET_KEY_BASE`, `AR_ENCRYPTION_*`, `JWT_SECRET`.
+- Pflicht-Secrets in Produktion: `SECRET_KEY_BASE`, `AR_ENCRYPTION_*`.
 - **Kein Docker/PostgreSQL/Redis** erforderlich — Bereitstellung = Ruby + Node +
   drei SQLite-Dateien.
 

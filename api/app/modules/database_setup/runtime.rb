@@ -19,11 +19,10 @@ module DatabaseSetup
     class << self
       # `sqlite`, `sqlserver` or `mariadb`.
       def adapter_name
-        return 'sqlite' if Rails.env.test?
-
         explicit = ENV['DB_ADAPTER'].to_s.strip
         return explicit if VALID_ADAPTERS.include?(explicit)
         return stored_adapter if ConfigurationStore.local_file_present?
+        return 'sqlite' if Rails.env.test?
 
         DEFAULT_ADAPTER
       end

@@ -20,6 +20,7 @@ module DatabaseSetup
     # Foreign-key dependency order: parents before children.
     TABLES = %w[
       users
+      sessions
       projects
       suppliers
       materials
@@ -55,6 +56,7 @@ module DatabaseSetup
 
     MODELS = {
       'users' => ::User,
+      'sessions' => ::Session,
       'projects' => ::Project,
       'suppliers' => ::Supplier,
       'materials' => ::Material,

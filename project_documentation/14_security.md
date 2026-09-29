@@ -1,25 +1,94 @@
 # 14 — Sicherheit
 
-## Authentifizierung
+## Authentifizierung (globaler Gate)
 
-- **JWT (HS256)** mit 24 h TTL (`Auth::JsonWebToken`).
-- Login: `POST /api/v1/auth/login` → `{ token, user }`.
-- Token-Validierung in `ApplicationController#current_user` (Bearer-Header bzw.
-  `?token=` für Smoke-Tests).
-- Secret-Auflösung: `JWT_SECRET` → `Rails.application.credentials.jwt_secret` →
-  Key-Generator-Fallback.
+Die Plattform ist **privat by default**. Jeder Endpunkt — mit Ausnahme der
+explizit erlaubten Pre-Authentifizierungs-Oberfläche — verlangt eine gültige,
+nicht abgelaufene, nicht widerrufene Session eines aktiven Benutzers. Der Gate
+ist global in `ApplicationController` verdrahtet
+(`before_action :authenticate_user!`) und wirkt damit auf **alle** Controller;
+er hängt nicht davon ab, dass ein einzelner Controller `authenticate_user!`
+erinnert.
+
+### Öffentliche Oberfläche (Pre-Authentifizierung)
+
+| Endpunkt | Zweck |
+|---|---|
+| `GET /api/v1/health` | Liveness-Probe (auch vor SQL-Setup erreichbar) |
+| `GET/POST /api/v1/system/setup/*` | Ersteinrichtung (nur solange kein SQL-Backend konfiguriert ist) |
+| `POST /api/v1/auth/login` | Anmeldung |
+
+Alles andere (`projects`, `materials`, `users`, `sessions`, `risk_events`,
+`risk_notifications`, `system/status`, `security_events`, `jobs`, …) verlangt
+eine valide Session.
+
+### Session-Token (SQL-gestützt)
+
+- Login `POST /api/v1/auth/login` → persistentes Session-Token. `Session.issue!`
+  liefert das Raw-Secret (32-Byte-Hex) genau einmal aus; die DB speichert nur den
+  SHA-256-Hash (`token_hash`).
+- Validierung in `ApplicationController#current_user` über `Session.authenticate`:
+  Token-Hash → aktive, nicht abgelaufene, nicht widerrufene Session → aktiver User.
+- Es gibt **keinen** zweiten Authentifizierungsweg (kein JWT-Fallback): eine vom
+  Session-Store abgelehnte/ungültige Session erhält keine zweite Chance.
+
+### Token-Transport und -Speicherung
+
+- Das Session-Token wird **ausschließlich** über den `Authorization: Bearer
+  <token>`-Header übertragen. `?token=`-Query-Parameter werden ignoriert, da
+  Tokens in URLs in Access-Logs, Browser-Verlauf und Referrer leaken.
+- **Frontend-Speicherung:** Das Token liegt in `localStorage`
+  (`god-engine.auth.token`). Das ist für dieses Deployment-Modell bewusst so
+  gewählt: eine statische React-SPA spricht eine zustandslose Rails-API über
+  den Authorization-Header an — es gibt keine serverseitige Session-Cookie.
+  Ein Wechsel auf HttpOnly-Cookies wäre ein Architektur-Redesign (Cookie-Session
+  + CSRF-Schutz) und ist hier nicht vorgesehen.
+- **Kompromiss & Begrenzung:** localStorage ist für Scripts lesbar (XSS-Risiko).
+  Die Auswirkung ist begrenzt, weil das Token bei jedem Start serverseitig
+  re-validiert wird (`/auth/me`) und serverseitig jederzeit widerrufen werden
+  kann. Ein zusätzlicher Härtungsschritt (separat, außerhalb dieses Umfangs)
+  wäre eine Content-Security-Policy.
+
+### Startup-Fluss (Fail-closed)
+
+```
+SQL-Konfiguration vorhanden?  Nein → Ersteinrichtung
+           Ja
+Gespeichertes Token vorhanden?  Nein → Login
+           Ja
+Token validieren (/auth/me): ungültig/abgelaufen/widerrufen → Login
+           Ja
+Benutzer laden: fehlt / inaktiv → Login
+           Ja
+Plattform / Dashboard
+```
+
+Kein Pfad führt ohne Session-Validierung ins Dashboard. Das Frontend re-validiert
+das gemerkte Token bei **jedem** Start (`stores.ts#bootstrap` → `GET /auth/me`)
+und rendert die App-Shell nur bei bestätigter Session (`App.tsx`).
+
+### Fail-closed
+
+- Kein Token, unbekanntes/manipuliertes Token, abgelaufene/widerrufene Session,
+  deaktivierter Benutzer → **401** (`NotAuthorized`).
+- Validierungsfehler (DB nicht erreichbar, inkonsistente Daten, Exception) →
+  ebenfalls **401** — niemals „als angemeldet annehmen“.
+
+Das Frontend ist nur UX-Grenze; die **Sicherheitsgrenze ist das Backend**: jede
+geschützte Operation prüft die Session serverseitig unabhängig von der UI.
 
 ## Autorisierung (rollenbasiert)
 
-| Rolle | Schreiben |
-|---|---|
-| `admin` | ja |
-| `manager` | ja |
-| `viewer` | nein |
+| Rolle | Schreiben | Admin |
+|---|---|---|
+| `admin` | ja | ja |
+| `manager` | ja | nein |
+| `viewer` | nein | nein |
 
-- `require_write!` schützt alle schreibenden Endpunkte (prüft `authenticate_user!` +
-  `can_write?`).
-- Lese-Endpunkte der Kalkulationsansichten sind bewusst offen (README).
+- `authenticate_user!` (global) — gültige Session.
+- `require_write!` — Schreibzugriff (`admin`/`manager`).
+- `require_admin!` — nur `admin` (User-/Session-Verwaltung, Security-Events,
+  Systemstatus). Authentifizierung ersetzt **keine** Autorisierung.
 
 ## Schutzmaßnahmen
 

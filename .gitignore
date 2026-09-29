@@ -17,6 +17,7 @@ api/config/credentials/*.key
 
 # Local SQL Server first-run configuration (contains credentials)
 api/config/sqlserver.local.yml
+api/config/sqlserver.local.test.yml
 
 # SQLite databases and their journals
 *.sqlite3

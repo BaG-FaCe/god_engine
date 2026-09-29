@@ -20,6 +20,7 @@ module DatabaseSetup
   module TableRouting
     # table name => logical database
     TABLE_DATABASE = {
+      'sessions' => :users,
       'users' => :users,
       'risk_events' => :events,
       'risk_event_metadata' => :events,

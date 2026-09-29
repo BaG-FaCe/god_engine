@@ -68,7 +68,7 @@ export interface RiskNotificationSummary {
   createdAt: Timestamp;
 }
 
-/** JWT login request / response. */
+/** Login request / response (SQL-backed session token). */
 export interface LoginRequest {
   email: string;
   password: string;

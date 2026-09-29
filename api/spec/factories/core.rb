@@ -10,6 +10,10 @@ FactoryBot.define do
       role { 'admin' }
     end
 
+    trait :manager do
+      role { 'manager' }
+    end
+
     trait :viewer do
       role { 'viewer' }
     end

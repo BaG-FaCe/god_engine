@@ -6,11 +6,17 @@ module Api
 
       before_action :set_default_format
       before_action :ensure_persistence_ready!
+      # --- GLOBAL AUTHENTICATION GATE ----------------------------------------
+      # The platform is private by default: every endpoint requires a valid,
+      # non-expired, non-revoked session for an active user, unless a controller
+      # explicitly opts out below (first-run setup, health probe, login). This
+      # boundary must never rely on a per-controller `authenticate_user!` call
+      # being remembered - it fails closed at the base class.
+      before_action :authenticate_user!
 
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
       rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable
       rescue_from ActionController::ParameterMissing, with: :render_bad_request
-      rescue_from JWT::DecodeError, JWT::ExpiredSignature, with: :render_unauthorized
 
       # Guards raise these so they *halt* the action (rendering alone does not
       # stop execution; the previous implementation let a forbidden write fall
@@ -43,27 +49,33 @@ module Api
 
       # --- auth -----------------------------------------------------------
 
+      def current_session
+        return @current_session if defined?(@current_session)
+
+        token = bearer_token
+        @current_session = token.present? ? Session.authenticate(token) : nil
+      rescue StandardError
+        # Fail closed: if the session store cannot confirm validity (DB down,
+        # inconsistent data, ...) the caller must NOT be treated as authenticated.
+        @current_session = nil
+      end
+
       def current_user
         return @current_user if defined?(@current_user)
 
-        token = bearer_token
-        @current_user =
-          if token.present?
-            payload = Auth::JsonWebToken.decode(token)
-            User.active.find_by(id: payload['sub'])
-          end
-      rescue JWT::DecodeError, JWT::ExpiredSignature
-        nil
+        # The SQL-backed Session is the single authoritative authentication
+        # source. `current_session` already fails closed (returns nil on any
+        # validation error), so there is no fallback path.
+        @current_user = current_session&.user
       end
 
-      # Accepts `Authorization: Bearer <token>` (the SPA) and `token` query
-      # parameters used by the smoke-test scripts.
+      # Session tokens are accepted ONLY via the `Authorization: Bearer <token>`
+      # header. Tokens are deliberately never read from query parameters, because
+      # tokens in URLs leak into access logs, browser history and referrers.
       def bearer_token
         header = request.headers['Authorization'].to_s
         match = AUTH_HEADER.match(header)
-        return match[1].strip if match
-
-        params[:token].presence
+        match && match[1].strip
       end
 
       def authenticate_user!
@@ -73,6 +85,11 @@ module Api
       def require_write!
         authenticate_user!
         raise Forbidden unless current_user.can_write?
+      end
+
+      def require_admin!
+        authenticate_user!
+        raise Forbidden unless current_user.admin?
       end
 
       def audit(action, auditable: nil, project: nil, changes: nil, metadata: nil)

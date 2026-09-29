@@ -2,7 +2,6 @@ module Api
   module V1
     # Material risk endpoints (spec § API-Design REST).
     class MaterialRiskController < ApplicationController
-      before_action :authenticate_user!, except: %i[show events]
       before_action :set_material
 
       # GET /api/v1/materials/:id/risk_assessment

@@ -3,6 +3,10 @@
 # Everything environment specific lives here: transaction rollback, WebMock (no
 # outbound socket ever opens) and the shared example groups under `spec/support`.
 ENV['RAILS_ENV'] ||= 'test'
+# The suite must never pick up a developer's local `config/sqlserver.local.yml`,
+# which would switch the ActiveRecord connections to a live SQL server at boot.
+# Tests run on SQLite unless a spec explicitly overrides `DB_ADAPTER`.
+ENV['DB_ADAPTER'] ||= 'sqlite'
 require 'spec_helper'
 ENV['AR_ENCRYPTION_PRIMARY_KEY'] ||= 'god-engine-test-primary-key'
 ENV['AR_ENCRYPTION_DETERMINISTIC_KEY'] ||= 'god-engine-test-deterministic-key'

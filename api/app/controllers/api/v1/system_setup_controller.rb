@@ -16,6 +16,7 @@ module Api
       # The setup endpoints are the only ones that must work before the SQL
       # backend has been configured.
       skip_before_action :ensure_persistence_ready!
+      skip_before_action :authenticate_user!
 
       rescue_from DatabaseSetup::Connection::Error,
                   DatabaseSetup::Provisioner::Error,

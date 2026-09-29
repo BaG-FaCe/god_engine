@@ -1,7 +1,6 @@
 module Api
   module V1
     class PricingScenariosController < ApplicationController
-      before_action :authenticate_user!, except: %i[index show]
       before_action :set_project
       before_action :set_scenario, only: %i[show update destroy activate optimize]
 

@@ -31,17 +31,20 @@ module DatabaseSetup
     end
 
     def self.failure_message(report)
-      problems = report.reject { |key, _value| key == :ok }
-                      .select { |_key, entry| !entry[:ok] }
-                      .map do |key, entry|
-        detail = entry[:error]
-        detail ||= [
-          ("missing tables #{entry[:missing].join(', ')}" if entry[:missing].present?),
-          ("unexpected tables #{entry[:unexpected].join(', ')}" if entry[:unexpected].present?)
-        ].compact.join('; ')
-        "#{key}: #{detail}"
-      end
+      problems = report
+                 .reject { |key, _value| key == :ok }
+                 .reject { |_key, entry| entry[:ok] }
+                 .map { |key, entry| "#{key}: #{problem_detail(entry)}" }
       "migration verification failed (#{problems.join('; ')})"
+    end
+
+    def self.problem_detail(entry)
+      return entry[:error] if entry[:error]
+
+      [
+        ("missing tables #{entry[:missing].join(', ')}" if entry[:missing].present?),
+        ("unexpected tables #{entry[:unexpected].join(', ')}" if entry[:unexpected].present?)
+      ].compact.join('; ')
     end
 
     private

@@ -4,7 +4,6 @@ module Api
     # forecasts / scenarios / suppliers / templates). One controller keeps the
     # surface small; the type is resolved from the route.
     class CostBlocksController < ApplicationController
-      before_action :authenticate_user!, except: %i[index]
       before_action :set_project
 
       MODEL = {

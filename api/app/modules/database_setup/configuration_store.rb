@@ -16,10 +16,14 @@ module DatabaseSetup
   # store, but it is never returned in logs and the file is excluded from git.
   class ConfigurationStore
     FILE_NAME = 'sqlserver.local.yml'
+    # The test suite must never read a developer's live `sqlserver.local.yml`;
+    # it uses a distinct, non-existent filename so the first-run state stays
+    # reproducible regardless of what is configured for local development.
+    TEST_FILE_NAME = 'sqlserver.local.test.yml'
 
     class << self
       def path
-        Rails.root.join('config', FILE_NAME)
+        Rails.root.join('config', Rails.env.test? ? TEST_FILE_NAME : FILE_NAME)
       end
 
       def local_file_present?

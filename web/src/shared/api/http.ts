@@ -223,4 +223,5 @@ export const authApi = {
       body: { email, password },
     }),
   me: () => request<{ user: unknown }>('/auth/me'),
+  logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),
 };

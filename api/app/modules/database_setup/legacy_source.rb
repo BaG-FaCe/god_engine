@@ -54,6 +54,7 @@ module DatabaseSetup
     def row_count(table)
       with_database { |db| db.get_first_value("SELECT COUNT(*) FROM #{quote(table)}").to_i }
     end
+
     private
 
     def default_file

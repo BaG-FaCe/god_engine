@@ -6,6 +6,7 @@ class User < UsersRecord
 
   has_secure_password
 
+  has_many :sessions, dependent: :destroy
   has_many :audit_logs, dependent: :nullify
   has_many :owned_projects, class_name: 'Project', foreign_key: :owner_id,
                             dependent: :nullify, inverse_of: :owner
@@ -32,6 +33,17 @@ class User < UsersRecord
 
   def record_login!
     update_column(:last_login_at, Time.current)
+  end
+
+  def revoke_all_sessions!(revoked_by: nil, except_session_id: nil)
+    scope = sessions.active
+    scope = scope.where.not(id: except_session_id) if except_session_id.present?
+    scope.find_each { |s| s.revoke!(revoked_by: revoked_by) }
+  end
+
+  # Safeguards against admin self-lockout or removing the last admin.
+  def self.last_admin?(user_id)
+    where(role: 'admin', active: true).where.not(id: user_id).empty?
   end
 
   def as_json(*)

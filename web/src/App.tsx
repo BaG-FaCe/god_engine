@@ -7,6 +7,8 @@ import { systemSetupApi } from './shared/api/systemSetup';
 import { MODULES, findModule, type ModuleDescriptor } from './shared/module-registry';
 import { AppShell } from './shell/AppShell';
 import { SetupScreen } from './shell/SetupScreen';
+import { LoginScreen } from './shell/LoginScreen';
+import { useAuthStore } from './stores';
 
 const MODULE_LABELS: Record<string, string> = {
   calculate: '∑',
@@ -115,16 +117,21 @@ function ModuleHost() {
  * Only the routes that exist are registered; module code arrives through the
  * lazy imports in `module-registry.ts`.
  *
- * First-run gate: the application persists its data in four SQL databases, so
- * as long as no SQL backend is configured the setup mask is shown instead of
- * the application shell (the API refuses persistent requests with 503 until
- * setup succeeds).
+ * Two gates run before the shell is ever mounted:
+ *
+ *   1. First-run gate: the application persists its data in four SQL databases,
+ *      so as long as no SQL backend is configured the setup mask is shown.
+ *   2. Authentication gate: without a valid session the login screen is shown.
+ *      A remembered token is re-validated against `/auth/me` on every startup,
+ *      so an expired/revoked/disabled session fails closed to login.
  */
 export default function App() {
   const [setup, setSetup] = useState<{ loading: boolean; required: boolean }>({
     loading: true,
     required: false,
   });
+  const authStatus = useAuthStore((state) => state.status);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,12 +150,22 @@ export default function App() {
     };
   }, []);
 
-  if (setup.loading) {
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+
+  if (setup.loading || authStatus === 'loading') {
     return <LoadingState label="Anwendung wird gestartet …" />;
   }
 
   if (setup.required) {
     return <SetupScreen onCompleted={() => window.location.reload()} />;
+  }
+
+  // Authentication gate: the platform shell is only reachable with a valid,
+  // validated session.
+  if (authStatus !== 'authenticated') {
+    return <LoginScreen />;
   }
 
   return (

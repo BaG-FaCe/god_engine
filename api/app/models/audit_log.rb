@@ -7,7 +7,11 @@
 # `audit_logs`, `audit_log_changes` and `audit_log_metadata` live in the `logs`
 # database of a SQL backend.
 class AuditLog < LogsRecord
-  ACTIONS = %w[create update delete import export archive restore login refresh configure].freeze
+  ACTIONS = %w[
+    create update delete import export archive restore login refresh configure
+    failed_login logout revoke_session revoke_all_sessions password_change
+    user_create user_update user_disable user_enable
+  ].freeze
 
   # The JSON column is called `changeset` because Active Record reserves
   # `changes` for dirty tracking (`ActiveRecord::DangerousAttributeError`).

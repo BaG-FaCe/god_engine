@@ -3,6 +3,7 @@ module Api
     class HealthController < ApplicationController
       # Health must answer even when the SQL backend is not configured yet.
       skip_before_action :ensure_persistence_ready!
+      skip_before_action :authenticate_user!
 
       # GET /api/v1/health — never throttled (see rack_attack.rb).
       def show

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_01_000009) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_01_000010) do
   create_table "alternative_suppliers", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "country"
     t.datetime "created_at", null: false
@@ -535,6 +535,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_01_000009) do
     t.datetime "updated_at", null: false
     t.string "value"
     t.index ["sanctions_entry_id"], name: "index_sanctions_entry_identifiers_on_sanctions_entry_id"
+  end
+
+  create_table "sessions", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds", default: 86400, null: false
+    t.datetime "expires_at", null: false
+    t.string "ip"
+    t.datetime "last_activity_at", null: false
+    t.datetime "revoked_at"
+    t.string "revoked_by_id"
+    t.string "token_hash", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.string "user_id", null: false
+    t.index ["expires_at"], name: "index_sessions_on_expires_at"
+    t.index ["revoked_at"], name: "index_sessions_on_revoked_at"
+    t.index ["token_hash"], name: "index_sessions_on_token_hash", unique: true
+    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "suppliers", id: { type: :string, limit: 36 }, force: :cascade do |t|

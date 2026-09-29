@@ -99,4 +99,3 @@ RSpec.describe DatabaseSetup::LegacyMigration do
     end
   end
 end
-

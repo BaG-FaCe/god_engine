@@ -36,7 +36,6 @@ gem 'solid_queue', '~> 1.0'
 
 # --- Authentication / security -------------------------------------------------
 gem 'bcrypt', '~> 3.1'
-gem 'jwt', '~> 3.1'
 gem 'rack-attack', '~> 6.7'
 gem 'rack-cors', '~> 2.0'
 

@@ -62,7 +62,8 @@ flowchart LR
   Ereignis-Ingestion, Benachrichtigungs-Policy.
 - **`shared`** — `JsonClient`, `RateLimiter`, `Audit::Recorder`, `JobAdapter`/
   `JobStatus`, `Money`.
-- **`auth`** — JWT encode/decode (`Auth::JsonWebToken`).
+- **`auth`** — SQL-gestützte Session-Verwaltung (`Session`/`Session.issue!`/`authenticate`)
+  als einzige, autoritative Authentifizierungsquelle (kein JWT-Fallback).
 
 ## Abhängigkeitsregeln
 

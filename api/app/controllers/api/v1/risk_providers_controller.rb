@@ -1,8 +1,6 @@
 module Api
   module V1
     class RiskProvidersController < ApplicationController
-      before_action :authenticate_user!, except: %i[index]
-
       # GET /api/v1/risk_providers?projectId=
       def index
         project = Project.find_by(id: params[:projectId])

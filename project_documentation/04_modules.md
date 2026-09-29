@@ -68,8 +68,9 @@
 
 ## `auth` (Authentifizierung)
 
-- `Auth::JsonWebToken` — JWT (HS256, 24 h TTL) `encode`/`decode`, Secret-Auflösung
-  (`JWT_SECRET` → `credentials` → Key-Generator-Fallback).
+- `Session` (Modell `app/models/session.rb`) — SQL-gestützte, persistente Session.
+  `Session.issue!` stellt das Token beim Login aus (nur der SHA-256-Hash wird
+  gespeichert), `Session.authenticate` validiert es. Kein JWT mehr.
 
 ## Frontend-Module
 

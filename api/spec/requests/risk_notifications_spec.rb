@@ -7,7 +7,7 @@ RSpec.describe 'RiskNotifications API', type: :request do
 
   describe 'GET /api/v1/risk_notifications' do
     it 'lists only open notifications by default and returns the counts' do
-      get '/api/v1/risk_notifications', params: { projectId: project.id }
+      get '/api/v1/risk_notifications', params: { projectId: project.id }, headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
@@ -18,7 +18,7 @@ RSpec.describe 'RiskNotifications API', type: :request do
     end
 
     it 'returns the dismissed ones when status=dismissed is requested' do
-      get '/api/v1/risk_notifications', params: { projectId: project.id, status: 'dismissed' }
+      get '/api/v1/risk_notifications', params: { projectId: project.id, status: 'dismissed' }, headers: auth_headers
 
       expect(response.parsed_body['data'].map { |n| n['title'] }).to include('verworfen')
     end
@@ -63,7 +63,7 @@ RSpec.describe 'RiskNotifications API', type: :request do
 
   describe 'the /api/v1/notifications alias' do
     it 'routes the same controller for index and acknowledge' do
-      get '/api/v1/notifications', params: { projectId: project.id }
+      get '/api/v1/notifications', params: { projectId: project.id }, headers: auth_headers
       expect(response).to have_http_status(:ok)
 
       post "/api/v1/notifications/#{open.id}/acknowledge", headers: auth_headers

@@ -1,7 +1,6 @@
 module Api
   module V1
     class SuppliersController < ApplicationController
-      before_action :authenticate_user!, except: %i[index show]
       before_action :set_project
       before_action :set_supplier, only: %i[show update destroy]
 

@@ -1,8 +1,6 @@
 module Api
   module V1
     class CostTemplatesController < ApplicationController
-      before_action :authenticate_user!, except: %i[index show]
-
       def index
         scope = CostTemplate.ordered
         scope = scope.for_project(Project.find_by(id: params[:projectId])) if params[:projectId]

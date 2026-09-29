@@ -12,6 +12,23 @@ Rails.application.routes.draw do
       # --- auth ----------------------------------------------------------
       post 'auth/login', to: 'auth#login'
       get 'auth/me', to: 'auth#me'
+      post 'auth/logout', to: 'auth#logout'
+      post 'auth/logout_all', to: 'auth#logout_all'
+      post 'auth/change_password', to: 'auth#change_password'
+
+      # --- admin & user management -----------------------------------------
+      resources :users, only: %i[index show create update] do
+        member do
+          post 'reset_password'
+        end
+      end
+      resources :sessions, only: %i[index destroy] do
+        collection do
+          post 'revoke_user'
+        end
+      end
+      get 'security_events', to: 'security_events#index'
+      get 'system/status', to: 'system_status#show'
 
       # --- first-run SQL Server setup -------------------------------------
       get 'system/setup/status', to: 'system_setup#status'

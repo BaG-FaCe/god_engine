@@ -8,7 +8,7 @@ RSpec.describe 'MaterialRisk API', type: :request do
     it 'returns the aggregated material view' do
       create(:risk_assessment, material: material)
       material.update_columns(risk_score: 42, risk_level: 'medium')
-      get "/api/v1/materials/#{material.id}/risk_assessment"
+      get "/api/v1/materials/#{material.id}/risk_assessment", headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body

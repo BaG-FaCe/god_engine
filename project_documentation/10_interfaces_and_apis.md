@@ -43,7 +43,9 @@ GET  /api/v1/health                   GET  /up
 - **Cent** als Integer für Geldbeträge.
 - **Fehler-Envelope:** `{ "error": { "code", "message", "details?" } }`.
 - **Pagination:** `{ data, meta: { page, perPage, total, totalPages } }`.
-- **Auth:** `Authorization: Bearer <JWT>` (SPA) bzw. `?token=` (Smoke-Tests).
+- **Auth:** `Authorization: Bearer <session-token>` (SPA & Smoke-Tests). Kein
+  `?token=`-Query-Parameter — Session-Tokens werden ausschließlich über den
+  Authorization-Header übertragen.
 
 ## Interne Schnittstelle: `RiskDataProvider`
 

@@ -23,7 +23,7 @@ RSpec.describe DatabaseSetup::Verification do
   it 'reports ok when every expected table exists' do
     tables = {
       'productdata' => DatabaseSetup::TableRouting.expected_tables_for(:productdata),
-      'users' => %w[users],
+      'users' => %w[sessions users],
       'events' => %w[risk_events risk_event_metadata risk_notifications],
       'logs' => %w[audit_logs audit_log_changes audit_log_metadata risk_provider_runs migration_runs]
     }
@@ -32,7 +32,7 @@ RSpec.describe DatabaseSetup::Verification do
 
     expect(report[:ok]).to be(true)
     expect(report[:users][:missing]).to be_empty
-    expect(report[:users][:tables]).to eq('users' => 7)
+    expect(report[:users][:tables]).to eq('sessions' => 7, 'users' => 7)
     expect(report[:events][:total_rows]).to eq(3 * 7)
     expect(report[:logs][:total_rows]).to eq(5 * 7)
   end
@@ -40,7 +40,7 @@ RSpec.describe DatabaseSetup::Verification do
   it 'reports the missing tables of a partially provisioned database' do
     tables = {
       'productdata' => DatabaseSetup::TableRouting.tables_for(:productdata),
-      'users' => %w[users],
+      'users' => %w[sessions users],
       'events' => %w[risk_events],
       'logs' => %w[audit_logs]
     }

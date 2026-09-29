@@ -9,6 +9,7 @@ RSpec.describe DatabaseSetup::TableRouting do
       expect(described_class.database_for('materials')).to eq(:productdata)
       expect(described_class.database_for('pricing_scenario_results')).to eq(:productdata)
       expect(described_class.database_for('users')).to eq(:users)
+      expect(described_class.database_for('sessions')).to eq(:users)
       expect(described_class.database_for('risk_events')).to eq(:events)
       expect(described_class.database_for('risk_event_metadata')).to eq(:events)
       expect(described_class.database_for('risk_notifications')).to eq(:events)
@@ -22,7 +23,7 @@ RSpec.describe DatabaseSetup::TableRouting do
 
   describe '.tables_for' do
     it 'lists the tables expected in each database' do
-      expect(described_class.tables_for(:users)).to eq(%w[users])
+      expect(described_class.tables_for(:users)).to contain_exactly('sessions', 'users')
       expect(described_class.tables_for(:events))
         .to contain_exactly('risk_events', 'risk_event_metadata', 'risk_notifications')
       expect(described_class.tables_for(:logs)).to contain_exactly(
@@ -54,6 +55,7 @@ RSpec.describe DatabaseSetup::TableRouting do
   describe 'model placement' do
     it 'binds each model to the record class of its logical database' do
       expect(User.superclass).to eq(UsersRecord)
+      expect(Session.superclass).to eq(UsersRecord)
       expect(RiskEvent.superclass).to eq(EventsRecord)
       expect(RiskEventMetadatum.superclass).to eq(EventsRecord)
       expect(RiskNotification.superclass).to eq(EventsRecord)

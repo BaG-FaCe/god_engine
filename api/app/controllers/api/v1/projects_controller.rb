@@ -1,7 +1,6 @@
 module Api
   module V1
     class ProjectsController < ApplicationController
-      before_action :authenticate_user!, except: %i[index show]
       before_action :set_project, only: %i[show update destroy duplicate archive restore export import]
 
       # GET /api/v1/projects
